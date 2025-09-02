@@ -186,7 +186,7 @@ interface ConvertedPrice {
 // Configuration - change this based on your environment
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
   ? 'https://your-production-domain.com' 
-  : 'http://localhost:5000';
+  : 'http:https://backend-instant-quote.vercel.app/';
 
 // GA helpers
 const initGoogleAnalytics = (): void => {
