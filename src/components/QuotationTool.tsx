@@ -186,7 +186,7 @@ interface ConvertedPrice {
 // Configuration - change this based on your environment
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
   ? 'https://your-production-domain.com' 
-  : 'http:https://backend-instant-quote.vercel.app/';
+  : 'https://backend-instant-quote.vercel.app/save-basic';
 
 // GA helpers
 const initGoogleAnalytics = (): void => {
@@ -533,7 +533,7 @@ const QuotationTool: React.FC = () => {
     };
 
     try {
-      const res = await fetch(`${API_BASE_URL}/save-basic`, {
+      const res = await fetch(`https://backend-instant-quote.vercel.app/save-basic`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -609,7 +609,7 @@ const QuotationTool: React.FC = () => {
         payload.insertProducts = formData.insertProducts;
       }
 
-      const response = await fetch(`${API_BASE_URL}/save`, {
+      const response = await fetch(`https://backend-instant-quote.vercel.app/save`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
