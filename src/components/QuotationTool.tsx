@@ -6,7 +6,6 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
    Types & Constants
    ----------------------- */
 
-// Extend Window interface for Google Analytics
 declare global {
   interface Window {
     dataLayer: any[];
@@ -184,39 +183,47 @@ interface ConvertedPrice {
   currency: string;
 }
 
-// Google Analytics helper functions
+// Configuration - change this based on your environment
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://your-production-domain.com' 
+  : 'http://localhost:5000';
+
+// GA helpers
 const initGoogleAnalytics = (): void => {
   try {
-    // Create and append gtag script
-    const script1 = document.createElement('script');
+    const script1 = document.createElement("script");
     script1.async = true;
-    script1.src = 'https://www.googletagmanager.com/gtag/js?id=G-M6FWN2GGV0';
+    script1.src = "https://www.googletagmanager.com/gtag/js?id=G-M6FWN2GGV0";
     document.head.appendChild(script1);
 
-    // Initialize gtag
     window.dataLayer = window.dataLayer || [];
     const gtag = (...args: any[]) => {
       window.dataLayer.push(args);
     };
     window.gtag = gtag;
-    gtag('js', new Date());
-    gtag('config', 'G-M6FWN2GGV0');
+    gtag("js", new Date());
+    gtag("config", "G-M6FWN2GGV0");
   } catch (error) {
-    console.error('Error initializing Google Analytics:', error);
+    console.error("Error initializing Google Analytics:", error);
   }
 };
 
-const trackEvent = (action: string, category: string = 'QuotationTool', label: string = '', value: number = 0): void => {
+const trackEvent = (
+  action: string,
+  category: string = "QuotationTool",
+  label: string = "",
+  value: number = 0
+): void => {
   try {
-    if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('event', action, {
+    if (typeof window !== "undefined" && window.gtag) {
+      window.gtag("event", action, {
         event_category: category,
         event_label: label,
-        value: value
+        value: value,
       });
     }
   } catch (error) {
-    console.error('Error tracking event:', error);
+    console.error("Error tracking event:", error);
   }
 };
 
@@ -263,14 +270,15 @@ const QuotationTool: React.FC = () => {
   const [quoteNumber, setQuoteNumber] = useState<string>("");
   const [convertedPrice, setConvertedPrice] = useState<ConvertedPrice>({ amount: 0, currency: "MUR" });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [savedId, setSavedId] = useState<string | null>(null);
 
-  // Initialize Google Analytics on component mount
   useEffect(() => {
     initGoogleAnalytics();
-    trackEvent('page_view', 'QuotationTool', 'Tool Loaded');
+    trackEvent("page_view", "QuotationTool", "Tool Loaded");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /* Pricing maps (same as yours) */
+  /* Pricing maps */
   const basePriceMap: Record<FormData["websiteType"], number> = {
     landing: 12000,
     corporate: 12000,
@@ -347,7 +355,6 @@ const QuotationTool: React.FC = () => {
     }
   };
 
-  /* --- calculate pricing --- */
   const calculatePricing = () => {
     const basePrice = basePriceMap[formData.websiteType] || 0;
     const productsPrice = productsPriceMap[formData.products] || 0;
@@ -357,7 +364,6 @@ const QuotationTool: React.FC = () => {
       insertProductsPrice = getInsertAllPrice();
     }
 
-    // pages price = 0 for both landing and ecommerce
     const pagesPrice =
       formData.websiteType === "landing" || formData.websiteType === "ecommerce"
         ? 0
@@ -399,18 +405,8 @@ const QuotationTool: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData]);
 
-  /* When ecommerce selected, clear pages (and any page error) so empty string won't be sent */
   useEffect(() => {
-    if (formData.websiteType === "ecommerce" && formData.pages !== "") {
-      setFormData((p) => ({ ...p, pages: "" }));
-      setErrors((e) => {
-        const copy = { ...e };
-        delete copy.pages;
-        return copy;
-      });
-    }
-    // Also if user selects landing, we clear pages as landing doesn't need pages
-    if (formData.websiteType === "landing" && formData.pages !== "") {
+    if ((formData.websiteType === "ecommerce" || formData.websiteType === "landing") && formData.pages !== "") {
       setFormData((p) => ({ ...p, pages: "" }));
       setErrors((e) => {
         const copy = { ...e };
@@ -422,7 +418,7 @@ const QuotationTool: React.FC = () => {
 
   /* Currency conversion */
   useEffect(() => {
-    const country = formData.country && formData.country !== "" ? formData.country : null;
+    const country = formData.country ? formData.country : null;
     const baseMUR = pricing.totalPrice || 0;
 
     if (!country) {
@@ -444,13 +440,10 @@ const QuotationTool: React.FC = () => {
 
   const converted = useMemo(() => convertedPrice, [convertedPrice]);
 
-  /* Input helpers */
   const handleInput = <K extends keyof FormData>(key: K, value: FormData[K]) => {
     setFormData((p) => ({ ...p, [key]: value }));
     setErrors((e) => ({ ...e, [String(key)]: "" }));
-    
-    // Track form interactions
-    trackEvent('form_interaction', 'QuotationTool', `${String(key)}_changed`, 0);
+    trackEvent("form_interaction", "QuotationTool", `${String(key)}_changed`, 0);
   };
 
   const handleWhatsAppInput = (value: string) => {
@@ -463,10 +456,8 @@ const QuotationTool: React.FC = () => {
       p.features.includes(feature) ? { ...p, features: p.features.filter((f) => f !== feature) } : { ...p, features: [...p.features, feature] }
     );
     setErrors((e) => ({ ...e, features: "" }));
-    
-    // Track feature selection
     const isSelected = !formData.features.includes(feature);
-    trackEvent('feature_toggle', 'QuotationTool', `${feature}_${isSelected ? 'selected' : 'deselected'}`);
+    trackEvent("feature_toggle", "QuotationTool", `${feature}_${isSelected ? "selected" : "deselected"}`);
   };
 
   const isValidEmail = (value: string) => {
@@ -475,16 +466,23 @@ const QuotationTool: React.FC = () => {
     return re.test(value);
   };
 
-  /* Validation (pages required only when not landing and not ecommerce) */
   const validateStep = (step: number): boolean => {
     const newErrors: Record<string, string> = {};
 
     if (step === 1) {
       if (!formData.fullName.trim()) newErrors.fullName = "Full name is required";
       if (!formData.country) newErrors.country = "Please select your country";
+
+      if (!formData.whatsappNumber.trim()) newErrors.whatsappNumber = "WhatsApp number is required";
+      else if (formData.whatsappNumber.replace(/\D/g, "").length < 10) newErrors.whatsappNumber = "Min 10 digits allowed";
+      else if (formData.whatsappNumber.replace(/\D/g, "").length > 15) newErrors.whatsappNumber = "Max 15 digits allowed";
+
+      if (!formData.email.trim()) newErrors.email = "Email is required";
+      else if (!isValidEmail(formData.email)) newErrors.email = "Email must be valid and include '@'";
     }
 
     if (step === 2) {
+      if (!formData.websiteType) newErrors.websiteType = "Please select website type";
       if (formData.websiteType === "ecommerce") {
         if (!formData.products) newErrors.products = "Select products range";
         if (!formData.insertProducts) newErrors.insertProducts = "Choose insert products option";
@@ -499,20 +497,12 @@ const QuotationTool: React.FC = () => {
       if (!formData.timeline) newErrors.timeline = "Select timeline";
       if (!formData.hosting) newErrors.hosting = "Select hosting option";
       if (!formData.domain) newErrors.domain = "Select domain option";
-      if (!formData.whatsappNumber.trim()) newErrors.whatsappNumber = "WhatsApp number is required";
-      else if (formData.whatsappNumber.replace(/\D/g, "").length < 10) newErrors.whatsappNumber = "Min 10 digits allowed";
-      else if (formData.whatsappNumber.replace(/\D/g, "").length > 15) newErrors.whatsappNumber = "Max 15 digits allowed";
-      if (!formData.email.trim()) newErrors.email = "Email is required";
-      else if (!isValidEmail(formData.email)) newErrors.email = "Email must be valid and include '@'";
     }
 
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length > 0) {
-      // Track validation errors
-      trackEvent('validation_error', 'QuotationTool', `step_${step}_error`, Object.keys(newErrors).length);
-      
-      // Friendly alert: show the first error found
+      trackEvent("validation_error", "QuotationTool", `step_${step}_error`, Object.keys(newErrors).length);
       const firstKey = Object.keys(newErrors)[0];
       window.alert(newErrors[firstKey]);
       return false;
@@ -523,29 +513,80 @@ const QuotationTool: React.FC = () => {
   const nextStep = () => {
     if (validateStep(currentStep)) {
       setCurrentStep((s) => Math.min(3, s + 1));
-      trackEvent('step_completed', 'QuotationTool', `step_${currentStep}_completed`);
+      trackEvent("step_completed", "QuotationTool", `step_${currentStep}_completed`);
     }
   };
-  
+
   const prevStep = () => {
     setCurrentStep((s) => Math.max(1, s - 1));
-    trackEvent('step_back', 'QuotationTool', `back_to_step_${Math.max(1, currentStep - 1)}`);
+    trackEvent("step_back", "QuotationTool", `back_to_step_${Math.max(1, currentStep - 1)}`);
   };
 
-  /* Submit: omit pages when ecommerce */
+  /* Save basic info to server */
+  const saveBasicToServer = async (): Promise<string | null> => {
+    const payload = {
+      name: formData.fullName,
+      companyName: formData.companyName,
+      country: formData.country,
+      email: formData.email,
+      number: formData.whatsappNumber,
+    };
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/save-basic`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error("save-basic error:", errorData);
+        window.alert(errorData.error || "Failed to save basic info. You can still continue.");
+        return null;
+      }
+      
+      const data = await res.json();
+      if (data && data.id) {
+        return data.id;
+      }
+      return null;
+    } catch (err) {
+      console.error("Network error saving basic info:", err);
+      window.alert("Network error while saving basic info. You can still continue.");
+      return null;
+    }
+  };
+
+  const handleNextFromStep1 = async () => {
+    if (!validateStep(1)) return;
+
+    const id = await saveBasicToServer();
+    if (id) {
+      setSavedId(id);
+      trackEvent("basic_info_saved", "QuotationTool", `SavedId:${id}`);
+    } else {
+      trackEvent("basic_info_save_failed", "QuotationTool", "Save failed or no id returned");
+    }
+
+    setCurrentStep((s) => Math.min(3, s + 1));
+  };
+
   const handleSubmit = async () => {
-    if (!validateStep(3)) return;
+    if (!validateStep(1) || !validateStep(2) || !validateStep(3)) return;
 
     setIsSubmitting(true);
-    trackEvent('quote_submit_started', 'QuotationTool', 'Quote Submission Started');
-    
+    trackEvent("quote_submit_started", "QuotationTool", "Quote Submission Started");
+
     try {
-      const rule = formData.country && formData.country !== "" ? COUNTRY_RULES[formData.country as Exclude<CountryKey, "">] : null;
+      const rule = formData.country ? COUNTRY_RULES[formData.country as Exclude<CountryKey, "">] : null;
       const finalCurrency = rule ? rule.currency : "MUR";
       const finalAmount = converted.amount;
 
       const payload: any = {
+        id: savedId || undefined,
         name: formData.fullName,
+        companyName: formData.companyName,
         email: formData.email,
         number: formData.whatsappNumber,
         country: formData.country,
@@ -557,59 +598,52 @@ const QuotationTool: React.FC = () => {
         domain: formData.domain,
         price: finalAmount,
         currency: finalCurrency,
+        message: formData.comments || "",
       };
 
       if (formData.websiteType !== "ecommerce" && formData.pages) {
         payload.pages = formData.pages;
       }
-
       if (formData.websiteType === "ecommerce") {
         payload.products = formData.products;
         payload.insertProducts = formData.insertProducts;
       }
 
-      const response = await fetch("https://backend-instant-quote-gray.vercel.app/save", {
+      const response = await fetch(`${API_BASE_URL}/save`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       const data = await response.json();
-      if (data.error) {
-        window.alert(data.error);
-        trackEvent('quote_submit_error', 'QuotationTool', data.error);
+      if (!response.ok || data.error) {
+        window.alert(data.error || "Failed to submit quote. Please try again.");
+        trackEvent("quote_submit_error", "QuotationTool", data.error || "Submit failed");
       } else {
         window.alert(`Quote sent successfully! Quote Number: ${data.quoteNumber}`);
         setQuoteNumber(data.quoteNumber);
-        
-        // Track successful quote submission with conversion value
-        trackEvent('quote_submit_success', 'QuotationTool', `Quote ${data.quoteNumber}`, Math.round(finalAmount));
-        
-        // Track as a conversion
-        if (typeof window !== 'undefined' && window.gtag) {
-          window.gtag('event', 'conversion', {
-            send_to: 'G-M6FWN2GGV0',
+        trackEvent("quote_submit_success", "QuotationTool", `Quote ${data.quoteNumber}`, Math.round(finalAmount));
+        if (typeof window !== "undefined" && window.gtag) {
+          window.gtag("event", "conversion", {
+            send_to: "G-M6FWN2GGV0",
             value: Math.round(finalAmount),
             currency: finalCurrency,
-            transaction_id: data.quoteNumber
+            transaction_id: data.quoteNumber,
           });
         }
+        setShowQuote(true);
       }
-
-      setShowQuote(true);
     } catch (err) {
       console.error("Error sending quote:", err);
       window.alert("Failed to send quote. Please try again.");
-      trackEvent('quote_submit_error', 'QuotationTool', 'Network Error');
+      trackEvent("quote_submit_error", "QuotationTool", "Network Error");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  
-
   if (showQuote) {
-    const rule = formData.country && formData.country !== "" ? COUNTRY_RULES[formData.country as Exclude<CountryKey, "">] : null;
+    const rule = formData.country ? COUNTRY_RULES[formData.country as Exclude<CountryKey, "">] : null;
     const finalCurrency = rule ? rule.currency : "MUR";
     const finalAmount = converted.amount;
 
@@ -693,7 +727,6 @@ const QuotationTool: React.FC = () => {
     );
   }
 
-  /* Main form render (kept as original structure, with pages visibility logic) */
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-12 px-4">
       <div className="max-w-4xl mx-auto">
@@ -712,11 +745,7 @@ const QuotationTool: React.FC = () => {
           <div className="flex items-center justify-center space-x-4">
             {[1, 2, 3].map((s) => (
               <div key={s} className="flex items-center">
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
-                    currentStep >= s ? " bg-[#ff6f61] text-white" : "bg-gray-200 text-gray-600"
-                  }`}
-                >
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= s ? " bg-[#ff6f61] text-white" : "bg-gray-200 text-gray-600"}`}>
                   {s}
                 </div>
                 {s < 3 && <div className={`w-16 h-1 mx-2 ${currentStep > s ? "bg-[#ff6f61]" : "bg-gray-200"}`} />}
@@ -781,6 +810,34 @@ const QuotationTool: React.FC = () => {
                   <p className="text-sm text-gray-700">
                     Converted total: <span className="font-medium">{convertedPrice.currency} {Math.round(convertedPrice.amount).toLocaleString()}</span>
                   </p>
+                </div>
+              </div>
+
+              {/* WhatsApp & Email on Step 1 */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">WhatsApp Number</label>
+                  <input
+                    type="tel"
+                    value={formData.whatsappNumber}
+                    onChange={(e) => handleWhatsAppInput(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter WhatsApp number (max 15 digits)"
+                    maxLength={15}
+                  />
+                  {errors.whatsappNumber && <p className="text-red-600 text-sm mt-1">{errors.whatsappNumber}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInput("email", e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter your email"
+                  />
+                  {errors.email && <p className="text-red-600 text-sm mt-1">{errors.email}</p>}
                 </div>
               </div>
             </div>
@@ -1026,33 +1083,6 @@ const QuotationTool: React.FC = () => {
                 {errors.domain && <p className="text-red-600 text-sm mt-1">{errors.domain}</p>}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">WhatsApp Number</label>
-                  <input
-                    type="tel"
-                    value={formData.whatsappNumber}
-                    onChange={(e) => handleWhatsAppInput(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter WhatsApp number (max 15 digits)"
-                    maxLength={15}
-                  />
-                  {errors.whatsappNumber && <p className="text-red-600 text-sm mt-1">{errors.whatsappNumber}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInput("email", e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter your email"
-                  />
-                  {errors.email && <p className="text-red-600 text-sm mt-1">{errors.email}</p>}
-                </div>
-              </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Comments</label>
                 <textarea
@@ -1160,7 +1190,7 @@ const QuotationTool: React.FC = () => {
 
             {currentStep < 3 ? (
               <button
-                onClick={nextStep}
+                onClick={currentStep === 1 ? handleNextFromStep1 : nextStep}
                 className="flex items-center px-6 py-3 bg-[#ff6f61] text-white rounded-lg hover:bg-[#e1291c] transition-all duration-200"
               >
                 Next
