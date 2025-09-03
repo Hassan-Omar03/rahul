@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { ArrowLeft, ArrowRight, ChevronDown } from "lucide-react";
 import logo from "../Assests/logo.png";
-import { ArrowLeft, ArrowRight } from "lucide-react";
 
 /* -----------------------
    Types & Constants
@@ -48,6 +48,7 @@ type CountryKey =
   | "Switzerland"
   | "United Arab Emirates"
   | "United States"
+  | "United Kingdom"
   | "Other Countries"
   | "";
 
@@ -58,6 +59,13 @@ interface CountryRule {
   currency: string;
   op: ConversionOp;
   rate: number;
+}
+
+interface CountryData {
+  name: string;
+  code: string;
+  dialCode: string;
+  flag: string;
 }
 
 const COUNTRY_RULES: Record<Exclude<CountryKey, "">, CountryRule> = {
@@ -95,6 +103,7 @@ const COUNTRY_RULES: Record<Exclude<CountryKey, "">, CountryRule> = {
   Switzerland: { multiplier: 2.8, currency: "CHF", op: "divide", rate: 53 },
   "United Arab Emirates": { multiplier: 2.0, currency: "AED", op: "divide", rate: 12 },
   "United States": { multiplier: 2.5, currency: "USD", op: "divide", rate: 46 },
+  "United Kingdom": { multiplier: 2.5, currency: "GBP", op: "divide", rate: 58 },
   "Other Countries": { multiplier: 2.0, currency: "EUR", op: "divide", rate: 48 },
 };
 
@@ -133,6 +142,7 @@ const COUNTRY_OPTIONS: CountryKey[] = [
   "Switzerland",
   "United Arab Emirates",
   "United States",
+  "United Kingdom",
   "Other Countries",
 ];
 
@@ -183,11 +193,6 @@ interface ConvertedPrice {
   currency: string;
 }
 
-// Configuration - change this based on your environment
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://your-production-domain.com' 
-  : 'https://backend-instant-quote.vercel.app/save-basic';
-
 // GA helpers
 const initGoogleAnalytics = (): void => {
   try {
@@ -228,13 +233,404 @@ const trackEvent = (
 };
 
 /* -----------------------
-   Component
+   Phone Input Component
+   - uses REST API but has a full fallback list covering COUNTRY_OPTIONS
+   ----------------------- */
+
+interface PhoneInputProps {
+  value: string;
+  onChange: (value: string, selectedCountry: CountryData) => void;
+  selectedCountry: string; // iso2 code (lowercase) expected
+  disabled?: boolean;
+  placeholder?: string;
+  onCountryChange?: (countryNameOrData: string | CountryData) => void; // can pass string or full CountryData
+}
+
+const PhoneInputComponent: React.FC<PhoneInputProps> = ({
+  value,
+  onChange,
+  selectedCountry,
+  disabled = false,
+  placeholder = "Enter phone number",
+  onCountryChange,
+}) => {
+  const [countries, setCountries] = useState<CountryData[]>([]);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  // full fallback list aligned with COUNTRY_OPTIONS (iso code, dial code, flag emoji)
+  const FALLBACK_COUNTRIES: CountryData[] = [
+    { name: "Australia", code: "au", dialCode: "+61", flag: "🇦🇺" },
+    { name: "Austria", code: "at", dialCode: "+43", flag: "🇦🇹" },
+    { name: "Belgium", code: "be", dialCode: "+32", flag: "🇧🇪" },
+    { name: "Canada", code: "ca", dialCode: "+1", flag: "🇨🇦" },
+    { name: "Cyprus", code: "cy", dialCode: "+357", flag: "🇨🇾" },
+    { name: "Czech Republic", code: "cz", dialCode: "+420", flag: "🇨🇿" },
+    { name: "Denmark", code: "dk", dialCode: "+45", flag: "🇩🇰" },
+    { name: "Estonia", code: "ee", dialCode: "+372", flag: "🇪🇪" },
+    { name: "Finland", code: "fi", dialCode: "+358", flag: "🇫🇮" },
+    { name: "France", code: "fr", dialCode: "+33", flag: "🇫🇷" },
+    { name: "Germany", code: "de", dialCode: "+49", flag: "🇩🇪" },
+    { name: "Ireland", code: "ie", dialCode: "+353", flag: "🇮🇪" },
+    { name: "Israel", code: "il", dialCode: "+972", flag: "🇮🇱" },
+    { name: "Italy", code: "it", dialCode: "+39", flag: "🇮🇹" },
+    { name: "Japan", code: "jp", dialCode: "+81", flag: "🇯🇵" },
+    { name: "Luxembourg", code: "lu", dialCode: "+352", flag: "🇱🇺" },
+    { name: "Malta", code: "mt", dialCode: "+356", flag: "🇲🇹" },
+    { name: "Mauritius", code: "mu", dialCode: "+230", flag: "🇲🇺" },
+    { name: "Netherlands", code: "nl", dialCode: "+31", flag: "🇳🇱" },
+    { name: "New Zealand", code: "nz", dialCode: "+64", flag: "🇳🇿" },
+    { name: "Norway", code: "no", dialCode: "+47", flag: "🇳🇴" },
+    { name: "Portugal", code: "pt", dialCode: "+351", flag: "🇵🇹" },
+    { name: "Qatar", code: "qa", dialCode: "+974", flag: "🇶🇦" },
+    { name: "Reunion Island", code: "re", dialCode: "+262", flag: "🇷🇪" },
+    { name: "Saudi Arabia", code: "sa", dialCode: "+966", flag: "🇸🇦" },
+    { name: "Singapore", code: "sg", dialCode: "+65", flag: "🇸🇬" },
+    { name: "Slovenia", code: "si", dialCode: "+386", flag: "🇸🇮" },
+    { name: "South Africa", code: "za", dialCode: "+27", flag: "🇿🇦" },
+    { name: "South Korea", code: "kr", dialCode: "+82", flag: "🇰🇷" },
+    { name: "Spain", code: "es", dialCode: "+34", flag: "🇪🇸" },
+    { name: "Sweden", code: "se", dialCode: "+46", flag: "🇸🇪" },
+    { name: "Switzerland", code: "ch", dialCode: "+41", flag: "🇨🇭" },
+    { name: "United Arab Emirates", code: "ae", dialCode: "+971", flag: "🇦🇪" },
+    { name: "United States", code: "us", dialCode: "+1", flag: "🇺🇸" },
+    { name: "United Kingdom", code: "gb", dialCode: "+44", flag: "🇬🇧" },
+    { name: "Other Countries", code: "oc", dialCode: "+000", flag: "🌐" },
+  ];
+
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        setIsLoading(true);
+        const res = await fetch("https://restcountries.com/v3.1/all?fields=name,cca2,idd,flag");
+        const data = await res.json();
+
+        const formatted: CountryData[] = (data || [])
+          .filter((c: any) => c?.idd?.root && Array.isArray(c.idd.suffixes) && c.idd.suffixes.length > 0)
+          .map((c: any) => ({
+            name: c.name?.common || String(c.name),
+            code: (c.cca2 || "").toLowerCase(),
+            dialCode: `${c.idd.root}${c.idd.suffixes[0]}`,
+            flag: c.flag || "",
+          }))
+          .sort((a: CountryData, b: CountryData) => a.name.localeCompare(b.name));
+
+        // Merge or fallback: include all fallback countries to guarantee all your options exist
+        const merged = [...formatted];
+
+        // ensure fallback entries exist (avoid duplicates by code)
+        FALLBACK_COUNTRIES.forEach((fb) => {
+          if (!merged.find((m) => m.code === fb.code)) merged.push(fb);
+        });
+
+        // keep unique by code
+        const uniqueByCode = Array.from(
+          new Map(merged.map((c) => [c.code, c])).values()
+        );
+
+        setCountries(uniqueByCode.sort((a, b) => a.name.localeCompare(b.name)));
+      } catch (err) {
+        console.error("Failed to fetch countries, using fallback:", err);
+        setCountries(FALLBACK_COUNTRIES.slice().sort((a, b) => a.name.localeCompare(b.name)));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCountries();
+  }, []);
+
+  // current country based on selectedCountry iso, fallback to Mauritius or first list item
+  const currentCountryData =
+    countries.find((c) => c.code === selectedCountry) ||
+    countries.find((c) => c.code === "mu") ||
+    countries[0] ||
+    { name: "Unknown", code: "mu", dialCode: "+230", flag: "🇲🇺" };
+
+  const filteredCountries = countries.filter(
+    (c) =>
+      c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.dialCode.includes(searchTerm)
+  );
+
+  // utilities
+  const onlyDigits = (s: string) => (s || "").replace(/\D/g, "");
+  const MAX_DIGITS = 17;
+  const MIN_DIGITS = 9;
+
+  // user typed in the phone input
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let phone = e.target.value;
+
+    // allow +, digits and spaces only
+    phone = phone.replace(/[^\d+\s]/g, "");
+
+    // count digits user typed (local input)
+    let typedDigits = onlyDigits(phone);
+
+    // if starts with + - it may include a full dial; attempt to find best match among known dial codes
+    if (phone.startsWith("+")) {
+      // build potential full number as typed; attempt to match country dial
+      const sorted = countries.slice().sort((a, b) => b.dialCode.length - a.dialCode.length);
+      const match = sorted.find((c) => phone.startsWith(c.dialCode));
+      // Enforce MAX_DIGITS on the whole typed string (including dial)
+      // compute current total digits in phone (includes dial + rest)
+      let totalDigits = onlyDigits(phone).length;
+      if (totalDigits > MAX_DIGITS) {
+        // truncate the digits part to MAX_DIGITS while preserving leading + and possible non-digits
+        let kept = 0;
+        const truncatedChars: string[] = [];
+        for (const ch of phone.split("")) {
+          if (/\d/.test(ch)) {
+            if (kept < MAX_DIGITS) {
+              truncatedChars.push(ch);
+              kept++;
+            } else {
+              // skip
+            }
+          } else {
+            truncatedChars.push(ch);
+          }
+        }
+        phone = truncatedChars.join("").replace(/\s{2,}/g, " ").trim();
+      }
+
+      if (match) {
+        onChange(phone, match);
+        if (onCountryChange) onCountryChange(match);
+        return;
+      }
+      // no match — update using currentCountryData as selected
+      onChange(phone, currentCountryData);
+      if (onCountryChange) onCountryChange(currentCountryData);
+      return;
+    }
+
+    // Local number entered — we must ensure total digits (dial + local) <= MAX_DIGITS
+    const dialDigits = onlyDigits(currentCountryData.dialCode).length;
+    const allowedLocalDigits = Math.max(0, MAX_DIGITS - dialDigits);
+
+    if (typedDigits.length > allowedLocalDigits) {
+      // truncate local part to allowedLocalDigits
+      // rebuild phone keeping only allowed number of digits and spaces/+ (though local has no +)
+      let kept = 0;
+      const truncatedChars: string[] = [];
+      for (const ch of phone.split("")) {
+        if (/\d/.test(ch)) {
+          if (kept < allowedLocalDigits) {
+            truncatedChars.push(ch);
+            kept++;
+          } else {
+            // skip
+          }
+        } else {
+          // keep spaces if any
+          truncatedChars.push(ch);
+        }
+      }
+      phone = truncatedChars.join("").replace(/\s{2,}/g, " ").trim();
+      typedDigits = onlyDigits(phone);
+    }
+
+    // local digits: prefix with current country dial code
+    const local = phone.replace(/[^\d\s]/g, "").trim();
+    const newNumber = currentCountryData.dialCode + (local ? " " + local : " ");
+    onChange(newNumber, currentCountryData);
+    if (onCountryChange) onCountryChange(currentCountryData);
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = (e.clipboardData.getData("Text") || "").replace(/[^\d+]/g, "");
+    if (!pasted) return;
+
+    // If pasted starts with +, we'll attempt to use as-is and enforce MAX_DIGITS
+    if (pasted.startsWith("+")) {
+      let digits = onlyDigits(pasted);
+      if (digits.length > MAX_DIGITS) {
+        // truncate digits to MAX_DIGITS while preserving leading +
+        let kept = 0;
+        const truncatedChars: string[] = [];
+        for (const ch of pasted.split("")) {
+          if (/\d/.test(ch)) {
+            if (kept < MAX_DIGITS) {
+              truncatedChars.push(ch);
+              kept++;
+            } else {
+              // skip
+            }
+          } else {
+            truncatedChars.push(ch);
+          }
+        }
+        const truncated = truncatedChars.join("").replace(/\s{2,}/g, " ").trim();
+        // detect dial match
+        const sorted = countries.slice().sort((a, b) => b.dialCode.length - a.dialCode.length);
+        const match = sorted.find((c) => truncated.startsWith(c.dialCode)) || currentCountryData;
+        onChange(truncated, match);
+        if (onCountryChange) onCountryChange(match);
+        return;
+      } else {
+        const sorted = countries.slice().sort((a, b) => b.dialCode.length - a.dialCode.length);
+        const match = sorted.find((c) => pasted.startsWith(c.dialCode)) || currentCountryData;
+        onChange(pasted, match);
+        if (onCountryChange) onCountryChange(match);
+        return;
+      }
+    }
+
+    // pasted local number: join with current dial, then enforce MAX_DIGITS
+    const dial = currentCountryData.dialCode;
+    const dialDigits = onlyDigits(dial).length;
+    let localDigits = onlyDigits(pasted);
+    // allowed local digits
+    const allowedLocal = Math.max(0, MAX_DIGITS - dialDigits);
+    if (localDigits.length > allowedLocal) {
+      localDigits = localDigits.slice(0, allowedLocal);
+    }
+    const newNumber = dial + (localDigits ? " " + localDigits : " ");
+    onChange(newNumber, currentCountryData);
+    if (onCountryChange) onCountryChange(currentCountryData);
+  };
+
+  const handleCountrySelect = (c: CountryData) => {
+    // keep the number-part (strip current country dial from the value)
+    const currentDialEscaped = currentCountryData.dialCode.replace("+", "\\+");
+    const numberPart = value.replace(new RegExp("^" + currentDialEscaped), "").trim();
+    const newVal = c.dialCode + (numberPart ? " " + numberPart : " ");
+    onChange(newVal, c);
+    if (onCountryChange) onCountryChange(c);
+    setIsDropdownOpen(false);
+    setSearchTerm("");
+  };
+
+  const displayValue = value.startsWith(currentCountryData.dialCode)
+    ? value.substring(currentCountryData.dialCode.length).trim()
+    : value.replace(currentCountryData.dialCode, "").trim();
+
+  if (isLoading) {
+    return (
+      <div className="flex border border-gray-300 rounded-lg overflow-hidden">
+        <div className="flex items-center px-3 py-3 bg-gray-50 border-r border-gray-300">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400" />
+        </div>
+        <input
+          type="tel"
+          className="flex-1 px-4 py-3 border-0 focus:ring-0 focus:outline-none bg-gray-100"
+          placeholder="Loading countries..."
+          disabled
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <div className="flex border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent">
+        <button
+          type="button"
+          onClick={() => setIsDropdownOpen((s) => !s)}
+          disabled={disabled}
+          className="flex items-center px-3 py-3 bg-gray-50 border-r border-gray-300 hover:bg-gray-100 focus:outline-none transition-colors"
+        >
+          <span className="text-lg mr-2">{currentCountryData.flag}</span>
+          <span className="text-sm font-medium text-gray-700 whitespace-nowrap mr-1">
+            {currentCountryData.dialCode}
+          </span>
+          <ChevronDown className="w-4 h-4 text-gray-500" />
+        </button>
+
+        <input
+          type="tel"
+          value={displayValue}
+          onChange={handlePhoneChange}
+          onPaste={handlePaste}
+          inputMode="tel"
+          onKeyDown={(e) => {
+            // allow navigation keys, backspace, delete, arrows, tab
+            const allowedKeys = [
+              "Backspace",
+              "Delete",
+              "ArrowLeft",
+              "ArrowRight",
+              "ArrowUp",
+              "ArrowDown",
+              "Tab",
+            ];
+            if (allowedKeys.includes(e.key)) return;
+
+            // allow plus and space
+            if (e.key === "+" || e.key === " ") return;
+
+            // if not a digit suppress
+            if (!/^\d$/.test(e.key)) {
+              e.preventDefault();
+              return;
+            }
+
+            // compute digits in dial + current displayValue
+            const currentLocalDigits = onlyDigits((e.currentTarget as HTMLInputElement).value).length;
+            const dialDigits = onlyDigits(currentCountryData.dialCode).length;
+            // If user selects all and types, e.currentTarget.value might be replaced; still, be conservative
+            if (dialDigits + currentLocalDigits >= MAX_DIGITS) {
+              e.preventDefault();
+            }
+          }}
+          className="flex-1 px-4 py-3 border-0 focus:ring-0 focus:outline-none"
+          placeholder={placeholder}
+          disabled={disabled}
+        />
+      </div>
+
+      {isDropdownOpen && (
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-auto">
+          <div className="p-3 border-b border-gray-200">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search countries..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            {filteredCountries.length > 0 ? (
+              filteredCountries.map((c) => (
+                <button
+                  key={c.code}
+                  onClick={() => handleCountrySelect(c)}
+                  className="w-full px-3 py-2 flex items-center hover:bg-gray-50 text-left"
+                >
+                  <span className="text-lg mr-3">{c.flag}</span>
+                  <span className="flex-1 text-sm">{c.name}</span>
+                  <span className="text-sm text-gray-500 ml-2">{c.dialCode}</span>
+                </button>
+              ))
+            ) : (
+              <div className="px-3 py-2 text-gray-500">No countries found</div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {isDropdownOpen && <div className="fixed inset-0 z-40" onClick={() => setIsDropdownOpen(false)} />}
+    </div>
+  );
+};
+
+/* -----------------------
+   Main Component
    ----------------------- */
 
 const QuotationTool: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [showQuote, setShowQuote] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingStep1, setIsLoadingStep1] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const [selectedPhoneCountry, setSelectedPhoneCountry] = useState("mu"); // iso2 code
 
   const [formData, setFormData] = useState<FormData>({
     fullName: "",
@@ -249,7 +645,7 @@ const QuotationTool: React.FC = () => {
     timeline: "",
     hosting: "",
     domain: "",
-    whatsappNumber: "",
+    whatsappNumber: "+230 ",
     email: "",
     comments: "",
   });
@@ -275,8 +671,17 @@ const QuotationTool: React.FC = () => {
   useEffect(() => {
     initGoogleAnalytics();
     trackEvent("page_view", "QuotationTool", "Tool Loaded");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isLoadingStep1 && countdown > 0) {
+      timer = setTimeout(() => setCountdown((p) => p - 1), 1000);
+    } else if (!isLoadingStep1) {
+      setCountdown(0);
+    }
+    return () => clearTimeout(timer);
+  }, [isLoadingStep1, countdown]);
 
   /* Pricing maps */
   const basePriceMap: Record<FormData["websiteType"], number> = {
@@ -402,7 +807,6 @@ const QuotationTool: React.FC = () => {
 
   useEffect(() => {
     calculatePricing();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData]);
 
   useEffect(() => {
@@ -414,6 +818,7 @@ const QuotationTool: React.FC = () => {
         return copy;
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.websiteType]);
 
   /* Currency conversion */
@@ -446,9 +851,52 @@ const QuotationTool: React.FC = () => {
     trackEvent("form_interaction", "QuotationTool", `${String(key)}_changed`, 0);
   };
 
-  const handleWhatsAppInput = (value: string) => {
-    const digits = value.replace(/\D/g, "").slice(0, 15);
-    handleInput("whatsappNumber", digits as FormData["whatsappNumber"]);
+  // handle phone component changes (value + detected CountryData)
+  const handleWhatsAppInput = (value: string, country: CountryData) => {
+    // update whatsapp text
+    handleInput("whatsappNumber", value as FormData["whatsappNumber"]);
+    // make phone component show the detected iso code
+    setSelectedPhoneCountry(country.code);
+    // pass full CountryData into handleCountryChange so we can use detected dial
+    handleCountryChange(country);
+  };
+
+  // map country label to your COUNTRY_OPTIONS entry (if possible)
+  // Accept either a string or CountryData (detected)
+  const handleCountryChange = (countryArg: string | CountryData) => {
+    const countryName = typeof countryArg === "string" ? countryArg : countryArg.name;
+    const detectedDial = typeof countryArg === "object" ? countryArg.dialCode : undefined;
+    const detectedIso = typeof countryArg === "object" ? countryArg.code : undefined;
+
+    const matchingCountry = COUNTRY_OPTIONS.find(
+      (c) =>
+        c.toLowerCase() === countryName.toLowerCase() ||
+        countryName.toLowerCase().includes(c.toLowerCase()) ||
+        c.toLowerCase().includes(countryName.toLowerCase())
+    );
+
+    if (matchingCountry) {
+      // exact/near match found -> set that
+      handleInput("country", matchingCountry as CountryKey);
+      // also set phone component iso code where possible (via map)
+      const iso = COUNTRY_NAME_TO_ISO[matchingCountry.toLowerCase()];
+      if (iso) setSelectedPhoneCountry(iso);
+      // Note: useEffect on formData.country will update whatsappNumber prefix (unless country === Other Countries)
+    } else {
+      // no match -> treat it as "Other Countries" BUT use detected dial if available
+      handleInput("country", "Other Countries");
+      // set phone component iso code to detected or fallback 'oc'
+      setSelectedPhoneCountry(detectedIso || "oc");
+
+      // update whatsappNumber using the detected dial code (if provided) or fallback to +000
+      setFormData((prev) => {
+        const prevNumber = prev.whatsappNumber || "";
+        // keep the number-part only (strip any leading dial)
+        const numberPart = prevNumber.replace(/^\+?[0-9]+\s*/, "").trim();
+        const dial = detectedDial || "+000";
+        return { ...prev, whatsappNumber: `${dial}${numberPart ? " " + numberPart : " "}` };
+      });
+    }
   };
 
   const toggleFeature = (feature: FeatureKey) => {
@@ -466,6 +914,26 @@ const QuotationTool: React.FC = () => {
     return re.test(value);
   };
 
+  // UPDATED phone validation:
+  // - Minimum 9 digits, maximum 15 digits (total digits across country code + local part)
+  const isValidPhone = (phone: string) => {
+    const raw = (phone || "").trim();
+    if (!raw) return false;
+
+    // normalize: remove spaces but keep '+'
+    const normalized = raw.replace(/\s+/g, "");
+
+    // helper to get only digits
+    const onlyDigits = (s: string) => s.replace(/\D/g, "");
+    const totalDigits = onlyDigits(normalized).length;
+
+    const MIN = 9;
+    const MAX = 17;
+
+    // require between MIN and MAX digits
+    return totalDigits >= MIN && totalDigits <= MAX;
+  };
+
   const validateStep = (step: number): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -473,9 +941,11 @@ const QuotationTool: React.FC = () => {
       if (!formData.fullName.trim()) newErrors.fullName = "Full name is required";
       if (!formData.country) newErrors.country = "Please select your country";
 
-      if (!formData.whatsappNumber.trim()) newErrors.whatsappNumber = "WhatsApp number is required";
-      else if (formData.whatsappNumber.replace(/\D/g, "").length < 10) newErrors.whatsappNumber = "Min 10 digits allowed";
-      else if (formData.whatsappNumber.replace(/\D/g, "").length > 15) newErrors.whatsappNumber = "Max 15 digits allowed";
+      if (!formData.whatsappNumber.trim()) {
+        newErrors.whatsappNumber = "WhatsApp number is required";
+      } else if (!isValidPhone(formData.whatsappNumber)) {
+        newErrors.whatsappNumber = "Please enter a valid phone number (include country code or enter local number). Must be between 9 and 17 digits.";
+      }
 
       if (!formData.email.trim()) newErrors.email = "Email is required";
       else if (!isValidEmail(formData.email)) newErrors.email = "Email must be valid and include '@'";
@@ -523,7 +993,16 @@ const QuotationTool: React.FC = () => {
   };
 
   /* Save basic info to server */
+  const isCountrySupported = (country?: string | null) => {
+    return !!country && COUNTRY_OPTIONS.includes(country as CountryKey);
+  };
+
   const saveBasicToServer = async (): Promise<string | null> => {
+    if (!isCountrySupported(formData.country)) {
+      window.alert("Selected country is not supported for API saving. The form will continue but data will not be saved remotely.");
+      return null;
+    }
+
     const payload = {
       name: formData.fullName,
       companyName: formData.companyName,
@@ -538,18 +1017,16 @@ const QuotationTool: React.FC = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      
+
       if (!res.ok) {
         const errorData = await res.json();
         console.error("save-basic error:", errorData);
         window.alert(errorData.error || "Failed to save basic info. You can still continue.");
         return null;
       }
-      
+
       const data = await res.json();
-      if (data && data.id) {
-        return data.id;
-      }
+      if (data && data.id) return data.id;
       return null;
     } catch (err) {
       console.error("Network error saving basic info:", err);
@@ -561,7 +1038,15 @@ const QuotationTool: React.FC = () => {
   const handleNextFromStep1 = async () => {
     if (!validateStep(1)) return;
 
-    const id = await saveBasicToServer();
+    if (isLoadingStep1) return;
+
+    setIsLoadingStep1(true);
+    setCountdown(7);
+
+    const apiPromise = saveBasicToServer();
+    const minLoadingTime = new Promise((r) => setTimeout(r, 7000));
+    const [id] = await Promise.all([apiPromise, minLoadingTime]);
+
     if (id) {
       setSavedId(id);
       trackEvent("basic_info_saved", "QuotationTool", `SavedId:${id}`);
@@ -569,7 +1054,9 @@ const QuotationTool: React.FC = () => {
       trackEvent("basic_info_save_failed", "QuotationTool", "Save failed or no id returned");
     }
 
-    setCurrentStep((s) => Math.min(3, s + 1));
+    setIsLoadingStep1(false);
+    setCountdown(0);
+    setCurrentStep(2);
   };
 
   const handleSubmit = async () => {
@@ -601,12 +1088,18 @@ const QuotationTool: React.FC = () => {
         message: formData.comments || "",
       };
 
-      if (formData.websiteType !== "ecommerce" && formData.pages) {
-        payload.pages = formData.pages;
-      }
+      if (formData.websiteType !== "ecommerce" && formData.pages) payload.pages = formData.pages;
       if (formData.websiteType === "ecommerce") {
         payload.products = formData.products;
         payload.insertProducts = formData.insertProducts;
+      }
+
+      if (!isCountrySupported(formData.country)) {
+        window.alert("Selected country is not supported by the backend API. The quote will be generated locally.");
+        setQuoteNumber("");
+        setShowQuote(true);
+        setIsSubmitting(false);
+        return;
       }
 
       const response = await fetch(`https://backend-instant-quote.vercel.app/save`, {
@@ -642,84 +1135,160 @@ const QuotationTool: React.FC = () => {
     }
   };
 
+  // Map between your country label and likely ISO2 code used by PhoneInputComponent
+  const COUNTRY_NAME_TO_ISO: Record<string, string> = {
+    "australia": "au",
+    "austria": "at",
+    "belgium": "be",
+    "canada": "ca",
+    "cyprus": "cy",
+    "czech republic": "cz",
+    "denmark": "dk",
+    "estonia": "ee",
+    "finland": "fi",
+    "france": "fr",
+    "germany": "de",
+    "ireland": "ie",
+    "israel": "il",
+    "italy": "it",
+    "japan": "jp",
+    "luxembourg": "lu",
+    "malta": "mt",
+    "mauritius": "mu",
+    "netherlands": "nl",
+    "new zealand": "nz",
+    "norway": "no",
+    "portugal": "pt",
+    "qatar": "qa",
+    "reunion island": "re",
+    "saudi arabia": "sa",
+    "singapore": "sg",
+    "slovenia": "si",
+    "south africa": "za",
+    "south korea": "kr",
+    "spain": "es",
+    "sweden": "se",
+    "switzerland": "ch",
+    "united arab emirates": "ae",
+    "united states": "us",
+    "united kingdom": "gb",
+    "other countries": "oc",
+  };
+
+  // static dial map to set whatsappNumber when user selects country from main select
+  const STATIC_DIAL_MAP: Record<string, string> = {
+    australia: "+61",
+    austria: "+43",
+    belgium: "+32",
+    canada: "+1",
+    cyprus: "+357",
+    "czech republic": "+420",
+    denmark: "+45",
+    estonia: "+372",
+    finland: "+358",
+    france: "+33",
+    germany: "+49",
+    ireland: "+353",
+    israel: "+972",
+    italy: "+39",
+    japan: "+81",
+    luxembourg: "+352",
+    malta: "+356",
+    mauritius: "+230",
+    netherlands: "+31",
+    "new zealand": "+64",
+    norway: "+47",
+    portugal: "+351",
+    qatar: "+974",
+    "reunion island": "+262",
+    "saudi arabia": "+966",
+    singapore: "+65",
+    slovenia: "+386",
+    "south africa": "+27",
+    "south korea": "+82",
+    spain: "+34",
+    sweden: "+46",
+    switzerland: "+41",
+    "united arab emirates": "+971",
+    "united states": "+1",
+    "united kingdom": "+44",
+    "other countries": "+000",
+  };
+
+  // When user selects country from main <select>, update phone prefix and phone-component iso
+  // NOTE: do NOT overwrite the detected dial when the country is "Other Countries"
+  useEffect(() => {
+    if (!formData.country) return;
+    const key = formData.country.toLowerCase();
+
+    // if user or detector set "Other Countries", do NOT auto-overwrite the whatsappNumber
+    if (key === "other countries") return;
+
+    const dial = STATIC_DIAL_MAP[key];
+    const iso = COUNTRY_NAME_TO_ISO[key];
+    if (dial) {
+      setFormData((prev) => {
+        const prevNumber = prev.whatsappNumber || "";
+        // extract number-part (strip any leading dial)
+        const numberPart = prevNumber.replace(/^\+?[0-9]+\s*/, "").trim();
+        return { ...prev, whatsappNumber: `${dial}${numberPart ? " " + numberPart : " "}` };
+      });
+    }
+    if (iso) setSelectedPhoneCountry(iso);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.country]);
+
   if (showQuote) {
     const rule = formData.country ? COUNTRY_RULES[formData.country as Exclude<CountryKey, "">] : null;
     const finalCurrency = rule ? rule.currency : "MUR";
     const finalAmount = converted.amount;
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-12 px-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-6 sm:py-12 px-2 sm:px-4">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12">
-            <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-[25%] h-16 mb-6">
-                <img src={logo} alt="logo" />
+          <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 md:p-12">
+            <div className="text-center mb-6 sm:mb-8">
+              <div className="inline-flex items-center justify-center w-32 sm:w-[25%] h-12 sm:h-16 mb-6">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 40'%3E%3Ctext y='25' font-size='16' fill='%23333'%3EBIM Africa%3C/text%3E%3C/svg%3E" alt="logo" className="max-h-full object-contain" />
               </div>
 
               {quoteNumber && (
                 <div className="mb-3">
-                  <span className="text-sm text-gray-500 mr-2">Quote #</span>
-                  <span className="inline-block font-mono bg-gray-100 px-3 py-1 rounded-lg text-sm font-semibold">{quoteNumber}</span>
+                  <span className="text-xs sm:text-sm text-gray-500 mr-2">Quote #</span>
+                  <span className="inline-block font-mono bg-gray-100 px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm font-semibold">
+                    {quoteNumber}
+                  </span>
                 </div>
               )}
 
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">Your Quote is Ready!</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Your Quote is Ready!</h1>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-6 mb-8">
-              <h2 className="text-xl font-semibold mb-4">Quote Summary</h2>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span>Country:</span>
-                  <span className="font-medium capitalize">{formData.country || "—"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Website Type:</span>
-                  <span className="font-medium capitalize">{formData.websiteType || "—"}</span>
-                </div>
-                {formData.websiteType !== "landing" && formData.websiteType !== "ecommerce" && (
-                  <div className="flex justify-between">
-                    <span>Pages:</span>
-                    <span className="font-medium capitalize">{formData.pages || "—"}</span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span>Design:</span>
-                  <span className="font-medium capitalize">{formData.designStyle || "—"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Features:</span>
-                  <span className="font-medium capitalize">{formData.features.map(f => f.replace(/-/g, " ")).join(", ") || "None"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Timeline:</span>
-                  <span className="font-medium capitalize">{formData.timeline || "—"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Hosting:</span>
-                  <span className="font-medium capitalize">{formData.hosting || "—"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Domain:</span>
-                  <span className="font-medium capitalize">{formData.domain || "—"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Number:</span>
-                  <span className="font-medium">{formData.whatsappNumber || "—"}</span>
-                </div>
+            <div className="bg-gray-50 rounded-lg p-4 sm:p-6 mb-8 text-right">
+              <h2 className="text-lg sm:text-xl font-semibold mb-4">Quote Summary</h2>
+              <div className="space-y-2 text-sm sm:text-base">
+                <div className="flex justify-between"><span>Country:</span><span className="font-medium capitalize">{formData.country || "—"}</span></div>
+                <div className="flex justify-between"><span>Website Type:</span><span className="font-medium capitalize">{formData.websiteType || "—"}</span></div>
+                {formData.websiteType !== "landing" && formData.websiteType !== "ecommerce" && (<div className="flex justify-between"><span>Pages:</span><span className="font-medium capitalize">{formData.pages || "—"}</span></div>)}
+                <div className="flex justify-between"><span>Design:</span><span className="font-medium capitalize">{formData.designStyle || "—"}</span></div>
+                <div className="flex justify-between"><span>Features:</span><span className="font-medium capitalize">{formData.features.map(f => f.replace(/-/g, " ")).join(", ") || "None"}</span></div>
+                <div className="flex justify-between"><span>Timeline:</span><span className="font-medium capitalize">{formData.timeline || "—"}</span></div>
+                <div className="flex justify-between"><span>Hosting:</span><span className="font-medium capitalize">{formData.hosting || "—"}</span></div>
+                <div className="flex justify-between"><span>Domain:</span><span className="font-medium capitalize">{formData.domain || "—"}</span></div>
+                <div className="flex justify-between"><span>Number:</span><span className="font-medium">{formData.whatsappNumber || "—"}</span></div>
                 <hr className="my-4" />
-                <div className="flex justify-between text-lg font-bold">
+                <div className="flex justify-between text-base sm:text-lg font-bold">
                   <span>Final Price:</span>
                   <span className="text-[#ff6f61]">{finalCurrency} {Math.round(finalAmount).toLocaleString()}</span>
                 </div>
               </div>
             </div>
 
-            <div className="text-center text-gray-600">
+            <div className="text-right text-gray-600">
               <p className="mb-2">We will contact you shortly to discuss further.</p>
               <p className="font-medium">Best Regards,</p>
               <p className="font-bold">Sales Team - BIM Africa</p>
-              <a className="text-blue-600" href="https://bim.africa/" target="_blank" rel="noopener noreferrer">www.bim.africa</a>
+              <a className="text-blue-600" href="https://bim.africa/" target="_blank" rel="noreferrer">www.bim.africa</a>
             </div>
           </div>
         </div>
@@ -735,19 +1304,15 @@ const QuotationTool: React.FC = () => {
             <img src={logo} alt="logo" />
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-4">BIM Africa - Instant Website Quotation Tool</h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Get an instant website quotation with live price calculation based on your selections.(Takes less than 2 minutes)
-          </p>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">Get an instant website quotation with live price calculation based on your selections.(Takes less than 2 minutes)</p>
         </div>
 
         {/* Progress */}
         <div className="mb-8">
           <div className="flex items-center justify-center space-x-4">
-            {[1, 2, 3].map((s) => (
+            {[1,2,3].map((s) => (
               <div key={s} className="flex items-center">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= s ? " bg-[#ff6f61] text-white" : "bg-gray-200 text-gray-600"}`}>
-                  {s}
-                </div>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= s ? "bg-[#ff6f61] text-white" : "bg-gray-200 text-gray-600"}`}>{s}</div>
                 {s < 3 && <div className={`w-16 h-1 mx-2 ${currentStep > s ? "bg-[#ff6f61]" : "bg-gray-200"}`} />}
               </div>
             ))}
@@ -764,79 +1329,48 @@ const QuotationTool: React.FC = () => {
           {currentStep === 1 && (
             <div className="space-y-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-6">Basic Information</h2>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                  <input
-                    type="text"
-                    value={formData.fullName}
-                    onChange={(e) => handleInput("fullName", e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter your full name"
-                  />
+                  <input type="text" value={formData.fullName} onChange={(e) => handleInput("fullName", e.target.value)} placeholder="Enter your full name" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" disabled={isLoadingStep1} />
                   {errors.fullName && <p className="text-red-600 text-sm mt-1">{errors.fullName}</p>}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
-                  <input
-                    type="text"
-                    value={formData.companyName}
-                    onChange={(e) => handleInput("companyName", e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter your company name"
-                  />
+                  <input type="text" value={formData.companyName} onChange={(e) => handleInput("companyName", e.target.value)} placeholder="Enter your company name" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" disabled={isLoadingStep1} />
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
-                <select
-                  value={formData.country}
-                  onChange={(e) => handleInput("country", e.target.value as CountryKey)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-                >
+                <select value={formData.country} onChange={(e) => handleInput("country", e.target.value as CountryKey)} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white" disabled={isLoadingStep1}>
                   <option value="">Select your country</option>
-                  {COUNTRY_OPTIONS.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
+                  {COUNTRY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
                 {errors.country && <p className="text-red-600 text-sm mt-1">{errors.country}</p>}
                 <p className="text-xs text-gray-500 mt-1">Prices are calculated internally in MUR; your final total will be shown in your currency.</p>
-
-                <div className="mt-2">
-                  <p className="text-sm text-gray-700">
-                    Converted total: <span className="font-medium">{convertedPrice.currency} {Math.round(convertedPrice.amount).toLocaleString()}</span>
-                  </p>
-                </div>
+                <div className="mt-2"><p className="text-sm text-gray-700">Converted total: <span className="font-medium">{convertedPrice.currency} {Math.round(convertedPrice.amount).toLocaleString()}</span></p></div>
               </div>
 
-              {/* WhatsApp & Email on Step 1 */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">WhatsApp Number</label>
-                  <input
-                    type="tel"
+                  <PhoneInputComponent
                     value={formData.whatsappNumber}
-                    onChange={(e) => handleWhatsAppInput(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter WhatsApp number (max 15 digits)"
-                    maxLength={15}
+                    onChange={handleWhatsAppInput}
+                    selectedCountry={selectedPhoneCountry}
+                    disabled={isLoadingStep1}
+                    placeholder="Enter phone number"
+                    onCountryChange={handleCountryChange}
                   />
                   {errors.whatsappNumber && <p className="text-red-600 text-sm mt-1">{errors.whatsappNumber}</p>}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInput("email", e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter your email"
-                  />
+                  <input type="email" value={formData.email} onChange={(e) => handleInput("email", e.target.value)} placeholder="Enter your email" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" disabled={isLoadingStep1} />
                   {errors.email && <p className="text-red-600 text-sm mt-1">{errors.email}</p>}
                 </div>
               </div>
@@ -852,19 +1386,12 @@ const QuotationTool: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-4">What type of website do you need?</label>
                 <div className="space-y-3">
                   {[
-                    { value: "landing", label: "Landing Page (One Pager) " },
-                    { value: "corporate", label: "Corporate Website " },
+                    { value: "landing", label: "Landing Page (One Pager)" },
+                    { value: "corporate", label: "Corporate Website" },
                     { value: "ecommerce", label: "E-Commerce Website" },
                   ].map((o) => (
                     <label key={o.value} className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="websiteType"
-                        value={o.value}
-                        checked={formData.websiteType === (o.value as any)}
-                        onChange={(e) => handleInput("websiteType", e.target.value as any)}
-                        className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                      />
+                      <input type="radio" name="websiteType" value={o.value} checked={formData.websiteType === (o.value as any)} onChange={(e) => handleInput("websiteType", e.target.value as any)} className="w-4 h-4 text-blue-600 border-gray-300" />
                       <span className="ml-3 text-sm font-medium text-gray-700">{o.label}</span>
                     </label>
                   ))}
@@ -878,20 +1405,13 @@ const QuotationTool: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-4">How many products will be inserted? *</label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {[
-                        { value: "1-10", label: "1-10 " },
-                        { value: "11-50", label: "11-50 " },
+                        { value: "1-10", label: "1-10" },
+                        { value: "11-50", label: "11-50" },
                         { value: "51-200", label: "51-200" },
                         { value: "200-500", label: "200-500" },
                       ].map((o) => (
                         <label key={o.value} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="products"
-                            value={o.value}
-                            checked={formData.products === (o.value as any)}
-                            onChange={(e) => handleInput("products", e.target.value as any)}
-                            className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                          />
+                          <input type="radio" name="products" value={o.value} checked={formData.products === (o.value as any)} onChange={(e) => handleInput("products", e.target.value as any)} className="w-4 h-4 text-blue-600 border-gray-300" />
                           <span className="ml-3 text-sm text-gray-700">{o.label}</span>
                         </label>
                       ))}
@@ -908,14 +1428,7 @@ const QuotationTool: React.FC = () => {
                           { value: "provide-training", label: "Provide training → + MUR 1,000" },
                         ].map((o) => (
                           <label key={o.value} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                            <input
-                              type="radio"
-                              name="insertProducts"
-                              value={o.value}
-                              checked={formData.insertProducts === (o.value as any)}
-                              onChange={(e) => handleInput("insertProducts", e.target.value as any)}
-                              className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                            />
+                            <input type="radio" name="insertProducts" value={o.value} checked={formData.insertProducts === (o.value as any)} onChange={(e) => handleInput("insertProducts", e.target.value as any)} className="w-4 h-4 text-blue-600 border-gray-300" />
                             <span className="ml-3 text-sm text-gray-700">{o.label}</span>
                           </label>
                         ))}
@@ -931,20 +1444,13 @@ const QuotationTool: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-4">Number of Pages</label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {[
-                      { value: "1-3", label: "1-3  " },
-                      { value: "4-7", label: "4-7 " },
-                      { value: "8-15", label: "8-15 " },
+                      { value: "1-3", label: "1-3" },
+                      { value: "4-7", label: "4-7" },
+                      { value: "8-15", label: "8-15" },
                       { value: "15+", label: "15+" },
                     ].map((o) => (
                       <label key={o.value} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="pages"
-                          value={o.value}
-                          checked={formData.pages === (o.value as any)}
-                          onChange={(e) => handleInput("pages", e.target.value as any)}
-                          className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                        />
+                        <input type="radio" name="pages" value={o.value} checked={formData.pages === (o.value as any)} onChange={(e) => handleInput("pages", e.target.value as any)} className="w-4 h-4 text-blue-600 border-gray-300" />
                         <span className="ml-3 text-sm text-gray-700">{o.label}</span>
                       </label>
                     ))}
@@ -957,20 +1463,13 @@ const QuotationTool: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-4">Design Style *</label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {[
-                    { value: "template", label: "Template  " },
-                    { value: "semi-custom", label: "Semi-custom " },
-                    { value: "fully-custom", label: "Fully custom " },
-                    { value: "not-sure", label: "not sure" },
+                    { value: "template", label: "Template" },
+                    { value: "semi-custom", label: "Semi-custom" },
+                    { value: "fully-custom", label: "Fully custom" },
+                    { value: "not-sure", label: "Not sure" },
                   ].map((o) => (
                     <label key={o.value} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="designStyle"
-                        value={o.value}
-                        checked={formData.designStyle === (o.value as any)}
-                        onChange={(e) => handleInput("designStyle", e.target.value as any)}
-                        className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                      />
+                      <input type="radio" name="designStyle" value={o.value} checked={formData.designStyle === (o.value as any)} onChange={(e) => handleInput("designStyle", e.target.value as any)} className="w-4 h-4 text-blue-600 border-gray-300" />
                       <span className="ml-3 text-sm text-gray-700">{o.label}</span>
                     </label>
                   ))}
@@ -993,12 +1492,7 @@ const QuotationTool: React.FC = () => {
                     { value: "newsletter", label: "Newsletter" },
                   ] as { value: FeatureKey; label: string }[]).map((o) => (
                     <label key={o.value} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formData.features.includes(o.value)}
-                        onChange={() => toggleFeature(o.value)}
-                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                      />
+                      <input type="checkbox" checked={formData.features.includes(o.value)} onChange={() => toggleFeature(o.value)} className="w-4 h-4 text-blue-600 border-gray-300" />
                       <span className="ml-3 text-sm text-gray-700">{o.label}</span>
                     </label>
                   ))}
@@ -1017,19 +1511,12 @@ const QuotationTool: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {[
                     { value: "6-8-weeks", label: "6-8 weeks → No change" },
-                    { value: "3-5-weeks", label: "3-5 weeks " },
-                    { value: "2-4-weeks", label: "2-4 weeks " },
-                    { value: "<2-weeks", label: "<2 weeks " },
+                    { value: "3-5-weeks", label: "3-5 weeks" },
+                    { value: "2-4-weeks", label: "2-4 weeks" },
+                    { value: "<2-weeks", label: "<2 weeks" },
                   ].map((o) => (
                     <label key={o.value} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="timeline"
-                        value={o.value}
-                        checked={formData.timeline === (o.value as any)}
-                        onChange={(e) => handleInput("timeline", e.target.value as any)}
-                        className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                      />
+                      <input type="radio" name="timeline" value={o.value} checked={formData.timeline === (o.value as any)} onChange={(e) => handleInput("timeline", e.target.value as any)} className="w-4 h-4 text-blue-600 border-gray-300" />
                       <span className="ml-3 text-sm text-gray-700">{o.label}</span>
                     </label>
                   ))}
@@ -1045,14 +1532,7 @@ const QuotationTool: React.FC = () => {
                     { value: "client", label: "Client to provide" },
                   ].map((o) => (
                     <label key={o.value} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="hosting"
-                        value={o.value}
-                        checked={formData.hosting === (o.value as any)}
-                        onChange={(e) => handleInput("hosting", e.target.value as any)}
-                        className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                      />
+                      <input type="radio" name="hosting" value={o.value} checked={formData.hosting === (o.value as any)} onChange={(e) => handleInput("hosting", e.target.value as any)} className="w-4 h-4 text-blue-600 border-gray-300" />
                       <span className="ml-3 text-sm text-gray-700">{o.label}</span>
                     </label>
                   ))}
@@ -1064,18 +1544,11 @@ const QuotationTool: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-4">Domain</label>
                 <div className="space-y-3">
                   {[
-                    { value: "bim africa to provide", label: "BIM Africa purchases (non-premium) " },
+                    { value: "bim africa to provide", label: "BIM Africa purchases (non-premium)" },
                     { value: "client", label: "Client purchases → No change" },
                   ].map((o) => (
                     <label key={o.value} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="domain"
-                        value={o.value}
-                        checked={formData.domain === (o.value as any)}
-                        onChange={(e) => handleInput("domain", e.target.value as any)}
-                        className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                      />
+                      <input type="radio" name="domain" value={o.value} checked={formData.domain === (o.value as any)} onChange={(e) => handleInput("domain", e.target.value as any)} className="w-4 h-4 text-blue-600 border-gray-300" />
                       <span className="ml-3 text-sm text-gray-700">{o.label}</span>
                     </label>
                   ))}
@@ -1085,18 +1558,12 @@ const QuotationTool: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Comments</label>
-                <textarea
-                  value={formData.comments}
-                  onChange={(e) => handleInput("comments", e.target.value)}
-                  rows={4}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical"
-                  placeholder="Any additional comments or requirements..."
-                />
+                <textarea value={formData.comments} onChange={(e) => handleInput("comments", e.target.value)} rows={4} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Any additional comments or requirements..." />
               </div>
             </div>
           )}
 
-          {/* Price Display */}
+          {/* Live Price Display */}
           {pricing.totalPrice > 0 && (
             <div className="mt-8 p-6 bg-blue-50 rounded-lg border border-blue-200">
               <h3 className="text-lg font-semibold text-blue-900 mb-4">Live Price Calculation</h3>
@@ -1179,29 +1646,25 @@ const QuotationTool: React.FC = () => {
 
           {/* Navigation Buttons */}
           <div className="flex flex-col md:flex-row justify-between mt-8 space-y-4 md:space-y-0 md:space-x-4">
-            <button
-              onClick={prevStep}
-              disabled={currentStep === 1}
-              className="flex items-center px-6 py-3 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Previous
+            <button onClick={prevStep} disabled={currentStep === 1 || isLoadingStep1} className="flex items-center px-6 py-3 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+              <ArrowLeft className="w-4 h-4 mr-2" /> Previous
             </button>
 
             {currentStep < 3 ? (
-              <button
-                onClick={currentStep === 1 ? handleNextFromStep1 : nextStep}
-                className="flex items-center px-6 py-3 bg-[#ff6f61] text-white rounded-lg hover:bg-[#e1291c] transition-all duration-200"
-              >
-                Next
-                <ArrowRight className="w-4 h-4 ml-2" />
+              <button onClick={currentStep === 1 ? handleNextFromStep1 : nextStep} disabled={isLoadingStep1} className="flex items-center px-6 py-3 bg-[#ff6f61] text-white rounded-lg hover:bg-[#e1291c] disabled:bg-gray-400">
+                {isLoadingStep1 ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                    Please Wait {countdown > 0 ? `(${countdown}s)` : ""}
+                  </>
+                ) : (
+                  <>
+                    Next <ArrowRight className="w-4 h-4 ml-2" />
+                  </>
+                )}
               </button>
             ) : (
-              <button
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-                className="flex items-center px-8 py-3 bg-[#ff6f61] text-white rounded-lg hover:bg-[#e1291c] disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200"
-              >
+              <button onClick={handleSubmit} disabled={isSubmitting} className="flex items-center px-8 py-3 bg-[#ff6f61] text-white rounded-lg hover:bg-[#e1291c] disabled:bg-gray-400">
                 {isSubmitting ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
