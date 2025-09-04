@@ -1248,9 +1248,10 @@ const QuotationTool: React.FC = () => {
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 md:p-12">
             <div className="text-center mb-6 sm:mb-8">
-              <div className="inline-flex items-center justify-center w-32 sm:w-[25%] h-12 sm:h-16 mb-6">
-                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 40'%3E%3Ctext y='25' font-size='16' fill='%23333'%3EBIM Africa%3C/text%3E%3C/svg%3E" alt="logo" className="max-h-full object-contain" />
+              <div className="inline-flex items-center justify-center w-[25%] h-16 mb-6">
+                <img src={logo} alt="logo" />
               </div>
+
 
               {quoteNumber && (
                 <div className="mb-3">
@@ -1264,7 +1265,7 @@ const QuotationTool: React.FC = () => {
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Your Quote is Ready!</h1>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-4 sm:p-6 mb-8 text-right">
+            <div className="bg-gray-50 rounded-lg p-4 sm:p-6 mb-8 text-center">
               <h2 className="text-lg sm:text-xl font-semibold mb-4">Quote Summary</h2>
               <div className="space-y-2 text-sm sm:text-base">
                 <div className="flex justify-between"><span>Country:</span><span className="font-medium capitalize">{formData.country || "—"}</span></div>
@@ -1284,7 +1285,7 @@ const QuotationTool: React.FC = () => {
               </div>
             </div>
 
-            <div className="text-right text-gray-600">
+            <div className="text-center text-gray-600">
               <p className="mb-2">We will contact you shortly to discuss further.</p>
               <p className="font-medium">Best Regards,</p>
               <p className="font-bold">Sales Team - BIM Africa</p>
