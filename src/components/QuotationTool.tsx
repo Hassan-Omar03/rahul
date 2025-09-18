@@ -1,7 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, ChevronDown } from "lucide-react";
-import logo from "../Assests/logo.png";
-
+import { ArrowLeft, ArrowRight, ChevronDown,Shield,Lock,Globe2,ShieldCheck } from "lucide-react";
+import logo from "../Assests/newlogo.png";
+import mobile from "../Assests/new.jpeg";
+import selected from "../Assests/selected.png";
+import nonselected from "../Assests/nonselected.png";
+import header from "../Assests/HEADER.png";
 /* -----------------------
    Types & Constants
    ----------------------- */
@@ -347,6 +350,7 @@ const PhoneInputComponent: React.FC<PhoneInputProps> = ({
     countries.find((c) => c.code === "mu") ||
     countries[0] ||
     { name: "Unknown", code: "mu", dialCode: "+230", flag: "🇲🇺" };
+    
 
   const filteredCountries = countries.filter(
     (c) =>
@@ -526,7 +530,9 @@ const PhoneInputComponent: React.FC<PhoneInputProps> = ({
   }
 
   return (
+
     <div className="relative">
+
       <div className="flex border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent">
         <button
           type="button"
@@ -1244,9 +1250,9 @@ const QuotationTool: React.FC = () => {
     const finalAmount = converted.amount;
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-6 sm:py-12 px-2 sm:px-4">
+      <div className="min-h-screen  py-6 sm:py-12 px-2 sm:px-4">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 md:p-12">
+          <div className=" rounded-2xl shadow-xl p-6 md:p-12">
             <div className="text-center mb-6 sm:mb-8">
               <div className="inline-flex items-center justify-center w-[25%] h-16 mb-6">
                 <img src={logo} alt="logo" />
@@ -1262,34 +1268,34 @@ const QuotationTool: React.FC = () => {
                 </div>
               )}
 
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Your Quote is Ready!</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-4">Your Quote is Ready!</h1>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-4 sm:p-6 mb-8 text-center">
-              <h2 className="text-lg sm:text-xl font-semibold mb-4">Quote Summary</h2>
+            <div className="bg-[#0b0b0b] border border-[#1f2937] rounded-lg p-4 sm:p-6 mb-8 text-center">
+              <h2 className="text-lg sm:text-xl font-semibold mb-4 text-red-700">Quote Summary</h2>
               <div className="space-y-2 text-sm sm:text-base">
-                <div className="flex justify-between"><span>Country:</span><span className="font-medium capitalize">{formData.country || "—"}</span></div>
-                <div className="flex justify-between"><span>Website Type:</span><span className="font-medium capitalize">{formData.websiteType || "—"}</span></div>
+                <div className="flex justify-between text-red-700"><span>Country:</span><span className="font-medium capitalize">{formData.country || "—"}</span></div>
+                <div className="flex justify-between text-red-700"><span>Website Type:</span><span className="font-medium capitalize">{formData.websiteType || "—"}</span></div>
                 {formData.websiteType !== "landing" && formData.websiteType !== "ecommerce" && (<div className="flex justify-between"><span>Pages:</span><span className="font-medium capitalize">{formData.pages || "—"}</span></div>)}
-                <div className="flex justify-between"><span>Design:</span><span className="font-medium capitalize">{formData.designStyle || "—"}</span></div>
-                <div className="flex justify-between"><span>Features:</span><span className="font-medium capitalize">{formData.features.map(f => f.replace(/-/g, " ")).join(", ") || "None"}</span></div>
-                <div className="flex justify-between"><span>Timeline:</span><span className="font-medium capitalize">{formData.timeline || "—"}</span></div>
-                <div className="flex justify-between"><span>Hosting:</span><span className="font-medium capitalize">{formData.hosting || "—"}</span></div>
-                <div className="flex justify-between"><span>Domain:</span><span className="font-medium capitalize">{formData.domain || "—"}</span></div>
-                <div className="flex justify-between"><span>Number:</span><span className="font-medium">{formData.whatsappNumber || "—"}</span></div>
+                <div className="flex justify-between text-red-700"><span>Design:</span><span className="font-medium capitalize">{formData.designStyle || "—"}</span></div>
+                <div className="flex justify-between text-red-700"><span>Features:</span><span className="font-medium capitalize">{formData.features.map(f => f.replace(/-/g, " ")).join(", ") || "None"}</span></div>
+                <div className="flex justify-between text-red-700"><span>Timeline:</span><span className="font-medium capitalize">{formData.timeline || "—"}</span></div>
+                <div className="flex justify-between text-red-700"><span>Hosting:</span><span className="font-medium capitalize">{formData.hosting || "—"}</span></div>
+                <div className="flex justify-between text-red-700"><span>Domain:</span><span className="font-medium capitalize">{formData.domain || "—"}</span></div>
+                <div className="flex justify-between text-red-700"><span>Number:</span><span className="font-medium">{formData.whatsappNumber || "—"}</span></div>
                 <hr className="my-4" />
-                <div className="flex justify-between text-base sm:text-lg font-bold">
+                <div className="flex justify-between text-base sm:text-lg font-bold text-red-700">
                   <span>Final Price:</span>
-                  <span className="text-[#ff6f61]">{finalCurrency} {Math.round(finalAmount).toLocaleString()}</span>
+                  <span className="red-700">{finalCurrency} {Math.round(finalAmount).toLocaleString()}</span>
                 </div>
               </div>
             </div>
 
-            <div className="text-center text-gray-600">
+            <div className="text-center text-red-700">
               <p className="mb-2">We will contact you shortly to discuss further.</p>
               <p className="font-medium">Best Regards,</p>
               <p className="font-bold">Sales Team - BIM Africa</p>
-              <a className="text-blue-600" href="https://bim.africa/" target="_blank" rel="noreferrer">www.bim.africa</a>
+              <a className="text-red-700" href="https://bim.africa/" target="_blank" rel="noreferrer">www.bim.africa</a>
             </div>
           </div>
         </div>
@@ -1298,66 +1304,263 @@ const QuotationTool: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-12 px-4">
+    <div className="min-h-screen text-white ">
+      
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <div className="inline-flex items-center justify-center w-24 h-16 rounded-full mb-6">
-            <img src={logo} alt="logo" />
+            
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">BIM Africa - Instant Website Quotation Tool</h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">Get an instant website quotation with live price calculation based on your selections.(Takes less than 2 minutes)</p>
-        </div>
+          <h1 className="md:text-4xl text-2xl font-bold mb-4">
+            <span className="text-red-700">Instant</span>
+            <span className="text-white">Website Quotation Tool</span>
+          </h1>
 
-        {/* Progress */}
-        <div className="mb-8">
-          <div className="flex items-center justify-center space-x-4">
-            {[1,2,3].map((s) => (
-              <div key={s} className="flex items-center">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= s ? "bg-[#ff6f61] text-white" : "bg-gray-200 text-gray-600"}`}>{s}</div>
-                {s < 3 && <div className={`w-16 h-1 mx-2 ${currentStep > s ? "bg-[#ff6f61]" : "bg-gray-200"}`} />}
-              </div>
-            ))}
-          </div>
-          <div className="flex justify-center mt-4 space-x-8 text-sm text-gray-600">
-            <span className={currentStep >= 1 ? "text-black font-medium" : ""}>Basic Info</span>
-            <span className={currentStep >= 2 ? "text-black font-medium" : ""}>Website Details</span>
-            <span className={currentStep >= 3 ? "text-black font-medium" : ""}>Final Details</span>
-          </div>
-        </div>
+          <p className="md:text-xl text-lg text-white max-w-[320px] md:max-w-3xl mx-auto">Know your website cost in under 2 minutes — transparent, automatic, and secure</p>
+          <div className="flex flex-wrap max-md:max-w-[320px] items-center justify-center mt-5 gap-2 mx-auto md:gap-4">
+  <div className="inline-flex items-center gap-2 rounded-full border border-gray-800 bg-[#0b0b0b] px-4 py-2">
+    <Lock size={16} className="text-red-600" />
+    <span className="text-sm font-medium text-white">SSL Encrypted</span>
+  </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12">
+  <div className="inline-flex items-center gap-2 rounded-full border border-gray-800 bg-[#0b0b0b] px-4 py-2">
+    <Globe2 size={16} className="text-red-600" />
+    <span className="text-sm font-medium text-white">GDPR Compliant</span>
+  </div>
+
+  <div className="inline-flex items-center gap-2 rounded-full border border-gray-800 bg-[#0b0b0b] px-4 py-2">
+    <ShieldCheck size={16} className="text-red-600" />
+    <span className="text-sm font-medium text-white">Trusted Worldwide</span>
+  </div>
+</div>
+
+        </div>
+{/* Progress */}
+<div className="mb-8 relative overflow-hidden">
+  {/* background only, no layout impact */}
+  <div className="absolute inset-0 rounded-full bg-black/40 border border-gray-800/60 pointer-events-none" />
+
+  <div className="relative px-1 sm:px-5 py-3">
+    {/* Progress */} 
+    <div className="flex items-center justify-center space-x-4">
+      {[1, 2, 3].map((s) => (
+        <div key={s} className="flex items-center">
+          {/* number circle */}
+          <div
+            className={`sm:w-10 h-7 sm:h-10 w-7 rounded-full flex items-center justify-center text-sm font-semibold
+              ${currentStep === s ? "bg-red-700 text-white shadow-[0_0_20px_rgba(185,28,28,0.3)]" : "bg-[#2b2b2b] text-gray-300"}`}
+          >
+            {s}
+          </div>
+
+          {/* label inline (right of the number) */}
+          <span
+            className={`md:ml-3 ml-1 max-sm:text-[13px] sm:text-sm font-medium ${
+              currentStep === s ? "text-red-700" : "text-red-700"
+            }`}
+          >
+            {["Basic Info", "Website Details", "Final Details"][s - 1]}
+          </span>
+
+          {/* separator */}
+          {s < 3 && (
+            <div className="max-w-16 h-[6px] max-md:hidden rounded-full mx-2 sm:mx-4 bg-gray-700/40" />
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
+</div>
+
+
+
+        <div className="rounded-2xl shadow-xl p-8 md:p-12 bg-[#0b0b0b] border border-[#1f2937] text-[#e5e7eb]">
+          
           {/* Step 1 */}
           {currentStep === 1 && (
             <div className="space-y-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-6">Basic Information</h2>
+              <h2 className="text-2xl font-semibold text-white mb-6">Basic Information</h2>
+              
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                  <input type="text" value={formData.fullName} onChange={(e) => handleInput("fullName", e.target.value)} placeholder="Enter your full name" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" disabled={isLoadingStep1} />
+                  <label className="block text-sm font-medium text-white mb-2">Full Name</label>
+                  <input type="text" value={formData.fullName} onChange={(e) => handleInput("fullName", e.target.value)} placeholder="Enter your full name" className="w-full px-4 py-3 rounded-lg bg-[#0b0b0b] text-[#e5e7eb]
+               border border-[#1f2937]
+               outline-none focus:outline-none
+               ring-0 focus:ring-0 focus:ring-offset-0
+               focus:border-red-700"
+ disabled={isLoadingStep1} />
                   {errors.fullName && <p className="text-red-600 text-sm mt-1">{errors.fullName}</p>}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
-                  <input type="text" value={formData.companyName} onChange={(e) => handleInput("companyName", e.target.value)} placeholder="Enter your company name" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" disabled={isLoadingStep1} />
+                  <label className="block text-sm font-medium text-white mb-2">Company Name</label>
+                  <input type="text" value={formData.companyName} onChange={(e) => handleInput("companyName", e.target.value)} placeholder="Enter your company name" className="w-full px-4 py-3 rounded-lg bg-[#0b0b0b] text-[#e5e7eb]
+               border border-[#1f2937]
+               outline-none focus:outline-none
+               ring-0 focus:ring-0 focus:ring-offset-0
+               focus:border-red-700"
+   disabled={isLoadingStep1} />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
-                <select value={formData.country} onChange={(e) => handleInput("country", e.target.value as CountryKey)} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white" disabled={isLoadingStep1}>
+                <label className="block text-sm font-medium text-white mb-2">Country</label>
+                <select value={formData.country} onChange={(e) => handleInput("country", e.target.value as CountryKey)} className="w-full px-4 py-3  rounded-lg focus:ring-2 focus:ring-red-700 focus:border-red-700   bg-[#0b0b0b] border border-[#1f2937] text-[#e5e7eb]" disabled={isLoadingStep1}>
                   <option value="">Select your country</option>
                   {COUNTRY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
                 {errors.country && <p className="text-red-600 text-sm mt-1">{errors.country}</p>}
-                <p className="text-xs text-gray-500 mt-1">Prices are calculated internally in MUR; your final total will be shown in your currency.</p>
-                <div className="mt-2"><p className="text-sm text-gray-700">Converted total: <span className="font-medium">{convertedPrice.currency} {Math.round(convertedPrice.amount).toLocaleString()}</span></p></div>
+                <p className="text-xs text-gray-300 mt-1">Prices are calculated internally in MUR; your final total will be shown in your currency.</p>
+                <div className="mt-2"><p className="text-sm text-white">Converted total: <span className="font-medium">{convertedPrice.currency} {Math.round(convertedPrice.amount).toLocaleString()}</span></p></div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">WhatsApp Number</label>
+<style>{`
+/* =========================
+   PHONE INPUT (dark) + DROPDOWN
+   ========================= */
+
+/* Flag + tel input inside the bordered wrapper */
+div[class*="flex"][class*="border"][class*="rounded-lg"] > input[type="tel"],
+div[class*="flex"][class*="border"][class*="rounded-lg"] > button[class*="flex"][class*="items-center"] + input[type="tel"] {
+  background-color: #0b0b0b !important;
+  color: #e5e7eb !important;
+  border-radius: 0.5rem !important;
+  width: 100% !important;
+  height: 3rem !important;
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  box-sizing: border-box !important;
+}
+
+/* Flag button area */
+div[class*="flex"][class*="border"][class*="rounded-lg"] > button[class*="flex"][class*="items-center"] {
+  background-color: #0b0b0b !important;
+  color: #e5e7eb !important;
+  height: 3rem !important;
+  padding-left: 0.75rem !important;
+  padding-right: 0.75rem !important;
+  box-sizing: border-box !important;
+}
+
+/* Disabled / placeholder */
+div[class*="flex"][class*="border"][class*="rounded-lg"] input[disabled][type="tel"],
+div[class*="flex"][class*="border"][class*="rounded-lg"] input[placeholder*="Loading"] {
+  background-color: #0b0b0b !important;
+  color: #e5e7eb !important;
+}
+
+/* Country dropdown panel */
+div[class*="absolute"][class*="z-50"][class*="w-full"] {
+  background-color: #0b0b0b !important;
+  color: #e5e7eb !important;
+  border: 1px solid #1f2937 !important;
+}
+
+/* Search in dropdown */
+div[class*="absolute"][class*="z-50"] input[type="text"] {
+  background-color: #0b0b0b !important;
+  color: #e5e7eb !important;
+  border: 1px solid #1f2937 !important;
+  border-radius: 0.375rem !important;
+  padding: 0.5rem !important;
+}
+
+/* Country rows */
+div[class*="absolute"][class*="z-50"] button {
+  background: transparent !important;
+  color: #e5e7eb !important;
+  text-align: left !important;
+}
+div[class*="absolute"][class*="z-50"] button:hover {
+  background-color: #111111 !important;
+}
+
+/* =========================
+   FOCUS STATES (NO BLUE, ONLY RED-700)
+   ========================= */
+
+/* Kill Tailwind blue ring and show only solid red-700 when wrapper focused */
+div[class*="focus-within:ring-blue-500"]:focus-within,
+div[class*="flex"][class*="border"][class*="rounded-lg"]:focus-within {
+  /* no glow/ring */
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+  --tw-ring-color: transparent !important;
+  box-shadow: none !important;
+
+  /* only crisp red border */
+  border-color: #b91c1c !important;   /* red-700 */
+  border-width: 2px !important;
+}
+
+/* Inputs/buttons inside wrapper: remove blue outline/ring fully */
+div[class*="flex"][class*="border"][class*="rounded-lg"] input[type="tel"]:focus,
+div[class*="flex"][class*="border"][class*="rounded-lg"] input[type="tel"]:focus-visible,
+div[class*="flex"][class*="border"][class*="rounded-lg"] button[class*="items-center"]:focus,
+div[class*="flex"][class*="border"][class*="rounded-lg"] button[class*="items-center"]:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+  --tw-ring-color: transparent !important;
+}
+
+/* Any element that has focus:ring-blue-500 (e.g., dropdown search input) */
+*[class*="focus:ring-blue-500"]:focus,
+*[class*="focus:ring-blue-500"]:focus-visible {
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+  --tw-ring-color: transparent !important;
+  box-shadow: none !important;
+  border-color: #b91c1c !important;   /* stay consistent red focus */
+}
+
+/* Fallback for any tel input in dark card */
+.rounded-2xl input[type="tel"] {
+  background-color: #0b0b0b !important;
+  color: #e5e7eb !important;
+}
+
+/* Native <select> focus look */
+select:focus,
+select:focus-visible {
+  outline: none !important;
+  border-color: #b91c1c !important;
+  color: #b91c1c !important;
+  background-color: #0b0b0b !important;
+}
+
+/* =========================
+   RADIO CARDS (NO WHITE BORDER)
+   ========================= */
+
+/* Label text next to radio -> white */
+label input[type="radio"] + .text-gray-700 { color: #ffffff !important; }
+
+/* Radio dot -> red-700 */
+label input[type="radio"] { accent-color: #b91c1c; }
+
+/* Default border = dark gray (no white anywhere) */
+label[class*="border"][class*="rounded"],
+div[class*="border"][class*="rounded"] { border-color: #1f2937 !important; }
+
+label.border-white,
+div.border-white,
+label[class*="border-white"],
+div[class*="border-white"] { border-color: #1f2937 !important; }
+
+/* Selected card -> solid red-700, no shadow */
+label:has(input[type="radio"]:checked),
+div:has(input[type="radio"]:checked) { border-color: #b91c1c !important; }
+`}</style>
+
+
+
+                  <label className="block text-sm font-medium text-white mb-2 ">WhatsApp Number</label>
                   <PhoneInputComponent
                     value={formData.whatsappNumber}
                     onChange={handleWhatsAppInput}
@@ -1365,45 +1568,73 @@ const QuotationTool: React.FC = () => {
                     disabled={isLoadingStep1}
                     placeholder="Enter phone number"
                     onCountryChange={handleCountryChange}
-                  />
+                    
+  />
                   {errors.whatsappNumber && <p className="text-red-600 text-sm mt-1">{errors.whatsappNumber}</p>}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                  <input type="email" value={formData.email} onChange={(e) => handleInput("email", e.target.value)} placeholder="Enter your email" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" disabled={isLoadingStep1} />
+                  <input type="email" value={formData.email} onChange={(e) => handleInput("email", e.target.value)} placeholder="Enter your email" className="w-full px-4 py-3 rounded-lg bg-[#0b0b0b] text-[#e5e7eb]
+               border border-[#1f2937]
+               outline-none focus:outline-none
+               ring-0 focus:ring-0 focus:ring-offset-0
+               focus:border-red-700"
+ disabled={isLoadingStep1} />
                   {errors.email && <p className="text-red-600 text-sm mt-1">{errors.email}</p>}
                 </div>
               </div>
+            
+
+<p className="flex items-center text-sm text-[#e5e7eb]">
+  <Shield size={16} className="text-red-700 mr-2" />
+  Your data is secure and GDPR protected
+</p>
+
             </div>
           )}
 
           {/* Step 2 */}
           {currentStep === 2 && (
             <div className="space-y-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-6">Website Details</h2>
+              <h2 className="text-2xl font-semibold text-red-700 mb-6">Website Details</h2>
+<style>{`
+  /* Make the label text next to the radio white, without touching your JSX/classes */
+  label input[type="radio"] + .text-gray-700 {
+    color: #ffffff !important;
+  }
+     /* Make radio dot red-700 instead of blue */
+  label input[type="radio"] {
+    accent-color: #b91c1c; /* red-700 */
+  }
+      /* SELECTED box ka border red-700 */
+  label:has(input[type="radio"]:checked) {
+    border-color: #b91c1c !important;
+  }
+`}</style>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-4">What type of website do you need?</label>
-                <div className="space-y-3">
-                  {[
-                    { value: "landing", label: "Landing Page (One Pager)" },
-                    { value: "corporate", label: "Corporate Website" },
-                    { value: "ecommerce", label: "E-Commerce Website" },
-                  ].map((o) => (
-                    <label key={o.value} className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <input type="radio" name="websiteType" value={o.value} checked={formData.websiteType === (o.value as any)} onChange={(e) => handleInput("websiteType", e.target.value as any)} className="w-4 h-4 text-blue-600 border-gray-300" />
-                      <span className="ml-3 text-sm font-medium text-gray-700">{o.label}</span>
-                    </label>
-                  ))}
-                </div>
-                {errors.websiteType && <p className="text-red-600 text-sm mt-1">{errors.websiteType}</p>}
-              </div>
+<div>
+  <label className="block text-sm font-medium text-white mb-4">What type of website do you need?</label>
+  <div className="space-y-3">
+    {[
+      { value: "landing", label: "Landing Page (One Pager)" },
+      { value: "corporate", label: "Corporate Website" },
+      { value: "ecommerce", label: "E-Commerce Website" },
+    ].map((o) => (
+      <label key={o.value} className="flex items-center p-4 focus:ring-2 focus:ring-red-700 focus:border-red-700   bg-[#0b0b0b] border border-[#1f2937] text-[#e5e7eb] rounded-lg">
+        <input type="radio" name="websiteType" value={o.value} checked={formData.websiteType === (o.value as any)} onChange={(e) => handleInput("websiteType", e.target.value as any)} className="w-4 h-4 text-blue-600 border-gray-300" />
+        <span className="ml-3 text-sm font-medium text-gray-700">{o.label}</span>
+      </label>
+    ))}
+  </div>
+  {errors.websiteType && <p className="text-red-600 text-sm mt-1">{errors.websiteType}</p>}
+</div>
+
 
               {formData.websiteType === "ecommerce" && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-4">How many products will be inserted? *</label>
+                    <label className="block text-sm font-medium text-white mb-4">How many products will be inserted? *</label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {[
                         { value: "1-10", label: "1-10" },
@@ -1411,7 +1642,7 @@ const QuotationTool: React.FC = () => {
                         { value: "51-200", label: "51-200" },
                         { value: "200-500", label: "200-500" },
                       ].map((o) => (
-                        <label key={o.value} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                        <label key={o.value} className="flex items-center p-3 focus:ring-2 focus:ring-red-700 focus:border-red-700   bg-[#0b0b0b] border border-[#1f2937] text-[#e5e7eb] rounded-lg">
                           <input type="radio" name="products" value={o.value} checked={formData.products === (o.value as any)} onChange={(e) => handleInput("products", e.target.value as any)} className="w-4 h-4 text-blue-600 border-gray-300" />
                           <span className="ml-3 text-sm text-gray-700">{o.label}</span>
                         </label>
@@ -1422,13 +1653,13 @@ const QuotationTool: React.FC = () => {
 
                   {formData.products && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-4">Insert products or training?</label>
+                      <label className="block text-sm font-medium text-white mb-4">Insert products or training?</label>
                       <div className="space-y-3">
                         {[
                           { value: "insert-all", label: `Insert all → + MUR ${getInsertAllPrice().toLocaleString()}` },
                           { value: "provide-training", label: "Provide training → + MUR 1,000" },
                         ].map((o) => (
-                          <label key={o.value} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                          <label key={o.value} className="flex items-center p-3 focus:ring-2 focus:ring-red-700 focus:border-red-700   bg-[#0b0b0b] border border-[#1f2937] text-[#e5e7eb] rounded-lg">
                             <input type="radio" name="insertProducts" value={o.value} checked={formData.insertProducts === (o.value as any)} onChange={(e) => handleInput("insertProducts", e.target.value as any)} className="w-4 h-4 text-blue-600 border-gray-300" />
                             <span className="ml-3 text-sm text-gray-700">{o.label}</span>
                           </label>
@@ -1442,7 +1673,7 @@ const QuotationTool: React.FC = () => {
 
               {formData.websiteType !== "landing" && formData.websiteType !== "ecommerce" && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-4">Number of Pages</label>
+                  <label className="block text-sm font-medium text-white-700 mb-4">Number of Pages</label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {[
                       { value: "1-3", label: "1-3" },
@@ -1450,7 +1681,7 @@ const QuotationTool: React.FC = () => {
                       { value: "8-15", label: "8-15" },
                       { value: "15+", label: "15+" },
                     ].map((o) => (
-                      <label key={o.value} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                      <label key={o.value} className="flex items-center p-3 focus:ring-2 focus:ring-red-700 focus:border-red-700   bg-[#0b0b0b] border border-[#1f2937] text-[#e5e7eb] rounded-lg">
                         <input type="radio" name="pages" value={o.value} checked={formData.pages === (o.value as any)} onChange={(e) => handleInput("pages", e.target.value as any)} className="w-4 h-4 text-blue-600 border-gray-300" />
                         <span className="ml-3 text-sm text-gray-700">{o.label}</span>
                       </label>
@@ -1461,7 +1692,7 @@ const QuotationTool: React.FC = () => {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-4">Design Style *</label>
+                <label className="block text-sm font-medium text-white-700 mb-4">Design Style *</label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {[
                     { value: "template", label: "Template" },
@@ -1469,9 +1700,9 @@ const QuotationTool: React.FC = () => {
                     { value: "fully-custom", label: "Fully custom" },
                     { value: "not-sure", label: "Not sure" },
                   ].map((o) => (
-                    <label key={o.value} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <label key={o.value} className="flex items-center p-3 focus:ring-2 focus:ring-red-700 focus:border-red-700   bg-[#0b0b0b] border border-[#1f2937] text-[#e5e7eb] rounded-lg">
                       <input type="radio" name="designStyle" value={o.value} checked={formData.designStyle === (o.value as any)} onChange={(e) => handleInput("designStyle", e.target.value as any)} className="w-4 h-4 text-blue-600 border-gray-300" />
-                      <span className="ml-3 text-sm text-gray-700">{o.label}</span>
+                      <span className="ml-3 text-sm text-white">{o.label}</span>
                     </label>
                   ))}
                 </div>
@@ -1479,7 +1710,7 @@ const QuotationTool: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-4">Features (checkboxes, sum prices)</label>
+                <label className="block text-sm font-medium text-white mb-4">Features (checkboxes, sum prices)</label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {([
                     { value: "contact-form", label: "Contact Form" },
@@ -1492,9 +1723,9 @@ const QuotationTool: React.FC = () => {
                     { value: "gallery", label: "Gallery" },
                     { value: "newsletter", label: "Newsletter" },
                   ] as { value: FeatureKey; label: string }[]).map((o) => (
-                    <label key={o.value} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <input type="checkbox" checked={formData.features.includes(o.value)} onChange={() => toggleFeature(o.value)} className="w-4 h-4 text-blue-600 border-gray-300" />
-                      <span className="ml-3 text-sm text-gray-700">{o.label}</span>
+                    <label key={o.value} className="flex items-center p-3 focus:ring-2 focus:ring-red-700 focus:border-red-700   bg-[#0b0b0b] border border-[#1f2937] text-[#e5e7eb] rounded-lg">
+                      <input type="checkbox" checked={formData.features.includes(o.value)} onChange={() => toggleFeature(o.value)} className="w-4 h-4 accent-red-700 border-gray-300 focus:ring-red-700" />
+                      <span className="ml-3 text-sm text-white">{o.label}</span>
                     </label>
                   ))}
                 </div>
@@ -1505,10 +1736,24 @@ const QuotationTool: React.FC = () => {
           {/* Step 3 */}
           {currentStep === 3 && (
             <div className="space-y-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-6">Final Details</h2>
+              <h2 className="text-2xl font-semibold text-white mb-6">Final Details</h2>
+              <style>{`
+  /* Make the label text next to the radio white, without touching your JSX/classes */
+  label input[type="radio"] + .text-gray-700 {
+    color: #ffffff !important;
+  }
+     /* Make radio dot red-700 instead of blue */
+  label input[type="radio"] {
+    accent-color: #b91c1c; /* red-700 */
+  }
+      /* SELECTED box ka border red-700 */
+  label:has(input[type="radio"]:checked) {
+    border-color: #b91c1c !important;
+  }
+`}</style>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-4">Timeline</label>
+                <label className="block text-sm font-medium text-white mb-4">Timeline</label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {[
                     { value: "6-8-weeks", label: "6-8 weeks → No change" },
@@ -1516,7 +1761,7 @@ const QuotationTool: React.FC = () => {
                     { value: "2-4-weeks", label: "2-4 weeks" },
                     { value: "<2-weeks", label: "<2 weeks" },
                   ].map((o) => (
-                    <label key={o.value} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <label key={o.value} className="flex items-center p-3 focus:ring-2 focus:ring-red-700 focus:border-red-700   bg-[#0b0b0b] border border-[#1f2937] text-[#e5e7eb] rounded-lg">
                       <input type="radio" name="timeline" value={o.value} checked={formData.timeline === (o.value as any)} onChange={(e) => handleInput("timeline", e.target.value as any)} className="w-4 h-4 text-blue-600 border-gray-300" />
                       <span className="ml-3 text-sm text-gray-700">{o.label}</span>
                     </label>
@@ -1526,15 +1771,15 @@ const QuotationTool: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-4">Hosting</label>
+                <label className="block text-sm font-medium text-white mb-4">Hosting</label>
                 <div className="space-y-3">
                   {[
                     { value: "bim africa to provide", label: "BIM Africa to provide" },
                     { value: "client", label: "Client to provide" },
                   ].map((o) => (
-                    <label key={o.value} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <label key={o.value} className="flex items-center p-3  focus:ring-2 focus:ring-red-700 focus:border-red-700   bg-[#0b0b0b] border border-[#1f2937] text-[#e5e7eb] rounded-lg">
                       <input type="radio" name="hosting" value={o.value} checked={formData.hosting === (o.value as any)} onChange={(e) => handleInput("hosting", e.target.value as any)} className="w-4 h-4 text-blue-600 border-gray-300" />
-                      <span className="ml-3 text-sm text-gray-700">{o.label}</span>
+                      <span className="ml-3 text-sm text-white">{o.label}</span>
                     </label>
                   ))}
                 </div>
@@ -1542,15 +1787,15 @@ const QuotationTool: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-4">Domain</label>
+                <label className="block text-sm font-medium text-white mb-4">Domain</label>
                 <div className="space-y-3">
                   {[
                     { value: "bim africa to provide", label: "BIM Africa purchases (non-premium)" },
                     { value: "client", label: "Client purchases → No change" },
                   ].map((o) => (
-                    <label key={o.value} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <label key={o.value} className="flex items-center p-3 focus:ring-2 focus:ring-red-700 focus:border-red-700   bg-[#0b0b0b] border border-[#1f2937] text-[#e5e7eb] rounded-lg">
                       <input type="radio" name="domain" value={o.value} checked={formData.domain === (o.value as any)} onChange={(e) => handleInput("domain", e.target.value as any)} className="w-4 h-4 text-blue-600 border-gray-300" />
-                      <span className="ml-3 text-sm text-gray-700">{o.label}</span>
+                      <span className="ml-3 text-sm text-white">{o.label}</span>
                     </label>
                   ))}
                 </div>
@@ -1558,17 +1803,17 @@ const QuotationTool: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Comments</label>
-                <textarea value={formData.comments} onChange={(e) => handleInput("comments", e.target.value)} rows={4} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Any additional comments or requirements..." />
+                <label className="block text-sm font-medium text-white mb-2">Comments</label>
+                <textarea value={formData.comments} onChange={(e) => handleInput("comments", e.target.value)} rows={4} className="w-full px-4 py-3 focus:ring-red-700 focus:border-red-700   bg-[#0b0b0b] border border-[#1f2937] text-[#e5e7eb] rounded-lg" placeholder="Any additional comments or requirements..." />
               </div>
             </div>
           )}
 
           {/* Live Price Display */}
           {pricing.totalPrice > 0 && (
-            <div className="mt-8 p-6 bg-blue-50 rounded-lg border border-blue-200">
-              <h3 className="text-lg font-semibold text-blue-900 mb-4">Live Price Calculation</h3>
-              <div className="space-y-2 text-sm text-blue-800">
+            <div className="mt-8 p-6 \ rounded-lg bg-[#0b0b0b] border border-[#1f2937]">
+              <h3 className="text-lg font-semibold text-red-700 mb-4">Live Price Calculation</h3>
+              <div className="space-y-2 text-sm text-red-700">
                 {(() => {
                   const convertPrice = (price: number) => {
                     if (!formData.country) return price;
@@ -1633,8 +1878,8 @@ const QuotationTool: React.FC = () => {
                           <span>+ {convertedPrice.currency} {Math.round(convertPrice(pricing.domainPrice)).toLocaleString()}</span>
                         </div>
                       )}
-                      <hr className="border-blue-300" />
-                      <div className="flex justify-between text-lg font-bold text-blue-900">
+                      <hr className="border-red-700" />
+                      <div className="flex justify-between text-lg font-bold text-red-700">
                         <span>Total Price:</span>
                         <span>{convertedPrice.currency} {Math.round(convertedPrice.amount).toLocaleString()}</span>
                       </div>
@@ -1647,12 +1892,12 @@ const QuotationTool: React.FC = () => {
 
           {/* Navigation Buttons */}
           <div className="flex flex-col md:flex-row justify-between mt-8 space-y-4 md:space-y-0 md:space-x-4">
-            <button onClick={prevStep} disabled={currentStep === 1 || isLoadingStep1} className="flex items-center px-6 py-3 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+            <button onClick={prevStep} disabled={currentStep === 1 || isLoadingStep1} className="flex items-center px-6 py-3 text-gray-900 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
               <ArrowLeft className="w-4 h-4 mr-2" /> Previous
             </button>
 
             {currentStep < 3 ? (
-              <button onClick={currentStep === 1 ? handleNextFromStep1 : nextStep} disabled={isLoadingStep1} className="flex items-center px-6 py-3 bg-[#ff6f61] text-white rounded-lg hover:bg-[#e1291c] disabled:bg-gray-400">
+              <button onClick={currentStep === 1 ? handleNextFromStep1 : nextStep} disabled={isLoadingStep1} className="flex items-center px-6 py-3 bg-red-700 text-white rounded-lg hover:bg-[#e1291c] disabled:bg-gray-400">
                 {isLoadingStep1 ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
@@ -1665,7 +1910,7 @@ const QuotationTool: React.FC = () => {
                 )}
               </button>
             ) : (
-              <button onClick={handleSubmit} disabled={isSubmitting} className="flex items-center px-8 py-3 bg-[#ff6f61] text-white rounded-lg hover:bg-[#e1291c] disabled:bg-gray-400">
+              <button onClick={handleSubmit} disabled={isSubmitting} className="flex items-center px-8 py-3 bg-red-700 text-white rounded-lg hover:bg-[#e1291c] disabled:bg-gray-400">
                 {isSubmitting ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
@@ -1678,6 +1923,17 @@ const QuotationTool: React.FC = () => {
             )}
           </div>
         </div>
+       <p className="text-center text-sm mt-5 text-[#e5e7eb]">
+  By continuing, you agree to our{" "}
+  <a href="/terms" className="text-red-700 hover:underline">
+    Terms of Service
+  </a>{" "}
+  and{" "}
+  <a href="/privacy" className="text-red-700 hover:underline">
+    Privacy Policy
+  </a>
+</p>
+
       </div>
     </div>
   );
