@@ -115,85 +115,82 @@ function App() {
       `}</style>
 
       <div className="bg-black/95 backdrop-blur-sm sticky top-0 z-50">
-        <div className="bg-black w-full py-2">
-          <div className="mx-auto text-white max-w-[1200px] w-[90%] flex items-center justify-between">
-            {/* Logo */}
-            <div>
-              <img
-                src={logo}
-                className="w-20 sm:w-24 md:w-28 lg:w-[110px]"
-                alt="asd"
+  <div className="bg-black w-full py-2">
+    <div className="mx-auto text-white max-w-[1200px] w-[90%] flex items-center justify-between">
+      {/* Logo */}
+      <div>
+        <img
+          src={logo}
+          className="w-20 sm:w-24 md:w-28 lg:w-[110px]"
+          alt="asd"
+        />
+      </div>
+
+      {/* Desktop Menu */}
+      <div className="hidden md:flex items-center space-x-6 lg:space-x-16 relative">
+        {menuItems.map((item) => (
+          <div
+            key={item}
+            className="wave-link relative font-medium text-white text-base"
+          >
+            {item}
+            <svg
+              className="link__graphic link__graphic--slide"
+              width="300%"
+              height="100%"
+              viewBox="0 0 1200 60"
+              preserveAspectRatio="none"
+            >
+              <path
+                d="M0,56.5c0,0,298.666,0,399.333,0C448.336,56.5,513.994,46,597,46
+                  c77.327,0,135,10.5,200.999,10.5c95.996,0,402.001,0,402.001,0"
+                fill="#FF6F61"
               />
-            </div>
-
-            {/* Desktop Menu */}
-            <div className="hidden md:flex items-center space-x-6 lg:space-x-16 relative">
-              {menuItems.map((item) => (
-                <div
-                  key={item}
-                  className="wave-link relative font-medium text-white text-base"
-                >
-                  {item}
-                  <svg
-                    className="link__graphic link__graphic--slide"
-                    width="300%"
-                    height="100%"
-                    viewBox="0 0 1200 60"
-                    preserveAspectRatio="none"
-                  >
-                    <path
-                      d="M0,56.5c0,0,298.666,0,399.333,0C448.336,56.5,513.994,46,597,46
-                        c77.327,0,135,10.5,200.999,10.5c95.996,0,402.001,0,402.001,0"
-                      fill="#FF6F61"
-                    />
-                  </svg>
-                </div>
-              ))}
-            </div>
-
-            {/* Desktop Buttons */}
-            <div className="hidden md:flex items-center space-x-2 md:space-x-4">
-              <a
-                href="https://quotation.bim.africa/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block"
-              >
-                <button className="text-red-500 border border-red-500 px-4 py-2 sm:px-6 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap hover:bg-red-500 hover:text-white">
-                  Instant Quotation
-                </button>
-              </a>
-            <button
-  type="button"
-  aria-label="French"
-  className="inline-flex items-center gap-2 pl-2 pr-3 h-10
-             rounded-full bg-white text-black
-             outline-none focus:outline-none
-             ring-0 focus:ring-2 focus:ring-red-700
-             hover:shadow-md active:scale-95 transition"
->
-  {/* red + dot */}
-  <span className="inline-flex items-center justify-center
-                   w-6 h-6 rounded-full bg-red-600 text-white
-                   text-base font-bold leading-none">+</span>
-
-  {/* label */}
-  <span className="text-sm font-medium">FR</span>
-</button>
-
-            </div>
-
-            {/* Mobile Toggle */}
-            <div className="md:hidden">
-              <img
-                src={header}
-                alt="menu"
-                className="w-8 h-8 cursor-pointer"
-                onClick={() => setMenuOpen(true)}
-              />
-            </div>
+            </svg>
           </div>
-        </div>
+        ))}
+      </div>
+
+      {/* ✅ Buttons visible on ALL screens */}
+      <div className="flex items-center space-x-2 md:space-x-4">
+        <a
+          href="https://quotation.bim.africa/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block"
+        >
+          <button className="text-red-500 border border-red-500 px-4 py-2 sm:px-6 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap hover:bg-red-500 hover:text-white">
+            Instant Quotation
+          </button>
+        </a>
+
+        <button
+          type="button"
+          aria-label="French"
+          className="inline-flex items-center gap-2 pl-2 pr-3 h-10
+                     rounded-full bg-white text-black
+                     outline-none focus:outline-none
+                     ring-0 focus:ring-2 focus:ring-red-700
+                     hover:shadow-md active:scale-95 transition"
+        >
+          <span className="inline-flex items-center justify-center
+                           w-6 h-6 rounded-full bg-red-600 text-white
+                           text-base font-bold leading-none">+</span>
+          <span className="text-sm font-medium">FR</span>
+        </button>
+      </div>
+
+      {/* Mobile Toggle */}
+      <div className="md:hidden">
+        <img
+          src={header}
+          alt="menu"
+          className="w-8 h-8 cursor-pointer"
+          onClick={() => setMenuOpen(true)}
+        />
+      </div>
+    </div>
+  </div>
 
         {/* Mobile Overlay - animated using framer-motion */}
         <AnimatePresence>
@@ -330,22 +327,27 @@ function App() {
           <QuotationTool />
         </div>
 
-        {/* WhatsApp Floating Button */}
-        <button
-          onClick={handleWhatsAppClick}
-          className="fixed bottom-6 right-6 bg-[#ff6f61] hover:bg-[#e1291c] text-white rounded-full p-4 shadow-lg transition-all duration-300 hover:shadow-xl z-50"
-          title="Chat on WhatsApp"
-        >
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.465 3.516" />
-          </svg>
-        </button>
+        WhatsApp Floating Button
+<button
+  onClick={handleWhatsAppClick}
+  className="fixed right-[20%] top-[65%]   /* 👈 slightly above center */
+             bg-[#ff1f00] hover:bg-[#e1291c] text-white 
+             rounded-full p-4 shadow-lg 
+             transition-all duration-300 hover:shadow-xl z-50"
+  title="Chat on WhatsApp"
+>
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.465 3.516" />
+  </svg>
+</button>
+
+
         <footer className="bg-black py-12 sm:py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             {/* Mobile Layout */}

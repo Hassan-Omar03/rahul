@@ -216,6 +216,7 @@ const initGoogleAnalytics = (): void => {
   }
 };
 
+
 const trackEvent = (
   action: string,
   category: string = "QuotationTool",
@@ -1251,6 +1252,7 @@ const QuotationTool: React.FC = () => {
 
     return (
       <div className="min-h-screen  py-6 sm:py-12 px-2 sm:px-4">
+        
         <div className="max-w-4xl mx-auto">
           <div className=" rounded-2xl shadow-xl p-6 md:p-12">
             <div className="text-center mb-6 sm:mb-8">
@@ -1308,7 +1310,7 @@ const QuotationTool: React.FC = () => {
       
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-24 h-16 rounded-full mb-6">
+          <div className="inline-flex items-center justify-center w-24 h-16 rounded-full ">
             
           </div>
           <h1 className="md:text-4xl text-2xl font-bold mb-4">
